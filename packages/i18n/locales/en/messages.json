@@ -1,0 +1,30 @@
+{
+  "extensionDescription": {
+    "description": "Google Meet participants randomizer",
+    "message": "Chrome extension to create random list of participants for Google Meet"
+  },
+  "extensionName": {
+    "description": "Google Meet participants randomizer",
+    "message": "Create a random list of participants"
+  },
+  "toggleTheme": {
+    "message": "Toggle theme"
+  },
+  "loading": {
+    "message": "Loading..."
+  },
+  "greeting": {
+    "description": "Greeting message",
+    "message": "Hello, My name is $NAME$",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John Doe"
+      }
+    }
+  },
+  "hello": {
+    "description": "Placeholder example",
+    "message": "Hello $1"
+  }
+}
