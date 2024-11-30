@@ -1,7 +1,7 @@
 {
   "name": "@extension/e2e",
   "version": "0.3.4",
-  "description": "E2e tests configuration boilerplate",
+  "description": "E2e tests configuration",
   "private": true,
   "type": "module",
   "scripts": {
