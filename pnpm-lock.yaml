@@ -8,9 +8,15 @@ importers:
 
   .:
     dependencies:
+      '@formkit/auto-animate':
+        specifier: ^0.8.2
+        version: 0.8.2
       eslint-plugin-tailwindcss:
         specifier: ^3.17.4
         version: 3.17.4(tailwindcss@3.4.14(ts-node@10.9.2(@swc/core@1.7.25)(@types/node@20.16.10)(typescript@5.5.4)))
+      popup:
+        specifier: ^0.0.3
+        version: 0.0.3
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -825,6 +831,9 @@ packages:
   '@eslint/js@8.57.0':
     resolution: {integrity: sha512-Ys+3g2TaW7gADOJzPt83SJtCDhMjndcDMFVQ/Tj9iA1BfJzFKD9mAUXT3OenpuPHbI6P/myECxRJrofUsDx/5g==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+
+  '@formkit/auto-animate@0.8.2':
+    resolution: {integrity: sha512-SwPWfeRa5veb1hOIBMdzI+73te5puUBHmqqaF1Bu7FjvxlYSz/kJcZKSa9Cg60zL0uRNeJL2SbRxV6Jp6Q1nFQ==}
 
   '@humanwhocodes/config-array@0.11.14':
     resolution: {integrity: sha512-3T8LkOmg45BV5FICb15QQMsyUSWrQ8AygVfC7ZG32zOalnqrilm018ZVCw0eapXux8FtA33q8PSRSstjee3jSg==}
@@ -1787,6 +1796,13 @@ packages:
   commander@9.5.0:
     resolution: {integrity: sha512-KRs7WVDKg86PWiuAqhDrAQnTXZKraVcCc6vFdL14qrZ/DcWwuRo7VoiYXalXO7S5GKpqYiVEwCbgFDfxNHKJBQ==}
     engines: {node: ^12.20.0 || >=14}
+
+  component-emitter@2.0.0:
+    resolution: {integrity: sha512-4m5s3Me2xxlVKG9PkZpQqHQR7bgpnN7joDMJ4yvVkVXngjoITG76IaZmzmywSeRTeTpc6N6r3H3+KyUurV8OYw==}
+    engines: {node: '>=18'}
+
+  component-inherit@0.0.3:
+    resolution: {integrity: sha512-w+LhYREhatpVqTESyGFg3NlP6Iu0kEKUHETY9GoZP/pQyW4mHFZuFWRUCIqVPZ36ueVLtoOEZaAqbCF2RDndaA==}
 
   compress-commons@6.0.2:
     resolution: {integrity: sha512-6FqVXeETqWPoGcfzrXb37E50NP0LXT8kAMu5ooZayhWWdgEY4lBEEcbQNXtkuKQsGduxiIcI4gOTsxTmuq/bSg==}
@@ -3284,6 +3300,9 @@ packages:
     resolution: {integrity: sha512-B7+VDyb8Tl6oMJT9oSO2CW8XC/T4UcJGrwOVoNGwOQsQYhlpfajmrMj5xeejqaASq3V/EqThyOeATEOMuSEXiA==}
     engines: {node: '>=12'}
 
+  popup@0.0.3:
+    resolution: {integrity: sha512-+555JSn78AMTHhGzMV//e5dWNkJ7rNTwn1S/R9sfKHFdLrAP5RfFME0JxLPCQD/kv/58aP/3vbJwqSTIVooT7Q==}
+
   possible-typed-array-names@1.0.0:
     resolution: {integrity: sha512-d7Uw+eZoloe0EHDIYoe+bQ5WXnGMOpmiZFTuMWCwpjzzkL2nTjcKiAk4hh8TjnGye2TwWOk3UXucZ+3rbmBa8Q==}
     engines: {node: '>= 0.4'}
@@ -4408,6 +4427,8 @@ snapshots:
       - supports-color
 
   '@eslint/js@8.57.0': {}
+
+  '@formkit/auto-animate@0.8.2': {}
 
   '@humanwhocodes/config-array@0.11.14':
     dependencies:
@@ -5566,6 +5587,10 @@ snapshots:
   commander@4.1.1: {}
 
   commander@9.5.0: {}
+
+  component-emitter@2.0.0: {}
+
+  component-inherit@0.0.3: {}
 
   compress-commons@6.0.2:
     dependencies:
@@ -7299,6 +7324,11 @@ snapshots:
   plimit-lit@1.6.1:
     dependencies:
       queue-lit: 1.5.2
+
+  popup@0.0.3:
+    dependencies:
+      component-emitter: 2.0.0
+      component-inherit: 0.0.3
 
   possible-typed-array-names@1.0.0: {}
 

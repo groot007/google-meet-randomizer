@@ -46,7 +46,7 @@ const manifest = deepmerge(
     },
     content_scripts: [
       {
-        matches: ['http://*/*', 'https://*/*', '<all_urls>'],
+        matches: ['http://meet.google.com/*', 'https://meet.google.com/*'],
         js: ['content/index.iife.js'],
       },
       {
@@ -54,7 +54,7 @@ const manifest = deepmerge(
         js: ['content-ui/index.iife.js'],
       },
       {
-        matches: ['http://*/*', 'https://*/*', '<all_urls>'],
+        matches: ['http://meet.google.com/*', 'https://meet.google.com/*'],
         css: ['content.css'], // public folder
       },
     ],
