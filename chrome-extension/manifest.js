@@ -3,14 +3,14 @@ import deepmerge from 'deepmerge';
 
 const packageJson = JSON.parse(fs.readFileSync('../package.json', 'utf8'));
 
-const isFirefox = process.env.__FIREFOX__ === 'true';
+// const isFirefox = process.env.__FIREFOX__ === 'true';
 
-const sidePanelConfig = {
-  side_panel: {
-    default_path: 'side-panel/index.html',
-  },
-  permissions: ['sidePanel'],
-};
+// const sidePanelConfig = {
+//   side_panel: {
+//     default_path: 'side-panel/index.html',
+//   },
+//   permissions: ['sidePanel'],
+// };
 
 /**
  * After changing, please reload the extension at `chrome://extensions`
@@ -27,9 +27,9 @@ const manifest = deepmerge(
     name: '__MSG_extensionName__',
     version: packageJson.version,
     description: '__MSG_extensionDescription__',
-    host_permissions: ['<all_urls>'],
-    permissions: ['storage', 'scripting', 'tabs'],
-    options_page: 'options/index.html',
+    host_permissions: ['http://meet.google.com/'],
+    permissions: ['storage', 'activeTab'],
+    // options_page: 'options/index.html',
     background: {
       service_worker: 'background.iife.js',
       type: 'module',
@@ -51,10 +51,6 @@ const manifest = deepmerge(
       },
       {
         matches: ['http://meet.google.com/*', 'https://meet.google.com/*'],
-        js: ['content-ui/index.iife.js'],
-      },
-      {
-        matches: ['http://meet.google.com/*', 'https://meet.google.com/*'],
         css: ['content.css'], // public folder
       },
     ],
@@ -65,7 +61,8 @@ const manifest = deepmerge(
       },
     ],
   },
-  !isFirefox && sidePanelConfig,
+  {},
+  // !isFirefox && sidePanelConfig,
 );
 
 export default manifest;

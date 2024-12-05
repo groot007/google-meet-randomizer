@@ -1,93 +1,53 @@
 import '@src/Popup.css';
 import { useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
+
+import { useEffect, useState } from 'react';
+
+import { FaArrowLeft, FaCog } from 'react-icons/fa';
+
+import Settings from './components/Settings';
+import MainContent from './components/MainContent';
 import { exampleThemeStorage } from '@extension/storage';
-import List from './components/List';
-import { useCallback, useState } from 'react';
-import { useParticipants, useCurrentUrl } from './hooks';
-import { saveList, shuffleArray } from './utils';
 
 const Popup = () => {
-  const [newParticipant, setNewParticipant] = useState<string>('');
-  const theme = useStorage(exampleThemeStorage);
-  const isLight = theme === 'light';
+  const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [isLightMode, setIsLightMode] = useState<boolean>(true);
 
-  const currentUrl = useCurrentUrl();
-  const { participants, addParticipant, toggleInclude, deleteParticipant, setParticipants } =
-    useParticipants(currentUrl);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newParticipant.trim() !== '') {
-      addParticipant(newParticipant.trim());
-      setNewParticipant('');
-    }
+  const toggleTheme = () => {
+    const newTheme = isLightMode ? 'light' : 'dark';
+    setIsLightMode(!isLightMode);
+    // Save the new theme to storage
+    exampleThemeStorage.set(newTheme);
   };
 
-  const shaffleList = useCallback(() => {
-    if (participants.length < 2) {
-      return;
-    }
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
+    setIsLightMode(mediaQuery.matches);
 
-    const shaffledList = shuffleArray(participants);
-    setParticipants(shaffledList);
-    // saveList(shaffledList, currentUrl);
-  }, [participants, setParticipants]);
+    const handleChange = (e: MediaQueryListEvent) => {
+      setIsLightMode(e.matches);
+    };
 
-  const copyToClipboard = () => {
-    const formattedList = participants.map((p, index) => `${index + 1}. ${p.name}`).join('\n');
-    navigator.clipboard.writeText(formattedList).then(() => {
-      console.log('Copied to clipboard');
-    });
-  };
+    mediaQuery.addEventListener('change', handleChange);
 
-  const sendToChat = () => {
-    const formattedList = participants.map((p, index) => `${index + 1}. ${p.name}`).join('\n');
-    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-      const currentTab = tabs[0];
-      if (currentTab?.id) {
-        chrome.tabs.sendMessage(currentTab.id, { action: 'sendToChat', message: formattedList }, response => {
-          if (response?.success) {
-            console.log('Message sent successfully');
-          } else {
-            console.log('ERROR sending message', response);
-          }
-        });
-      }
-    });
-  };
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, []);
 
   return (
-    <div className={`App ${isLight ? 'bg-slate-50 text-black' : 'bg-gray-800 text-white'} p-4`}>
-      {participants.length === 0 && <div>No participants found</div>}
-      {participants.length > 0 && (
-        <div>
-          Participants: <List items={participants} onToggleInclude={toggleInclude} onDelete={deleteParticipant} />
-        </div>
-      )}
-      <form onSubmit={handleSubmit} className="mt-4">
-        <input
-          type="text"
-          value={newParticipant}
-          onChange={e => setNewParticipant(e.target.value)}
-          className="mb-2 p-2 w-full border border-gray-300 rounded text-black"
-          placeholder="Add a new participant"
-        />
-        <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-          Add Participant
+    <div
+      className={`App ${isLightMode ? 'light-theme bg-slate-50 text-black' : 'dark-theme bg-gray-800 text-white'} p-4 transition-colors duration-300`}>
+      <div className="absolute z-10 flex flex-col items-start space-y-1">
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className={`flex h-7 w-7 items-center justify-center rounded p-1 ${isLightMode ? 'text-black hover:bg-gray-200' : 'text-white hover:bg-gray-600'} `}>
+          {showSettings ? <FaArrowLeft size={16} /> : <FaCog size={16} />}
         </button>
-      </form>
-      <br />
-      <button onClick={shaffleList} className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-        Shuffle
-      </button>
-      <br />
-      <button onClick={copyToClipboard} className="w-full p-2 bg-green-500 text-white rounded hover:bg-green-600 mt-2">
-        Copy to Clipboard
-      </button>
-      <br />
-      <button onClick={sendToChat} className="w-full p-2 bg-purple-500 text-white rounded hover:bg-purple-600 mt-2">
-        Send to Google Meet Chat
-      </button>
+      </div>
+
+      {showSettings && <Settings onThemeToggle={toggleTheme} isLightTheme={isLightMode} />}
+      {!showSettings && <MainContent isLightTheme={isLightMode} />}
     </div>
   );
 };

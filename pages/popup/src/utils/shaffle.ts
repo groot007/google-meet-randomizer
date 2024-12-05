@@ -1,6 +1,10 @@
 import { type ParticipantsListItem } from '@src/types';
 
 export function shuffleArray(array: ParticipantsListItem[]) {
+  if (array.length < 2) {
+    return array;
+  }
+
   const includedParticipants = array.filter(p => p.included);
   const excludedParticipants = array.filter(p => !p.included);
 

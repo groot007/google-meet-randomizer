@@ -1,19 +1,29 @@
+import { v4 as uuidv4 } from 'uuid';
 import { type ParticipantsListItem } from '@src/types';
 
 export const mergeParticipants = (
   newParticipants: ParticipantsListItem[],
-  storedParticipants: ParticipantsListItem[],
+  savedParticipants: ParticipantsListItem[],
 ): ParticipantsListItem[] => {
-  const merged = [...storedParticipants];
+  const merged = [...savedParticipants];
 
   newParticipants.forEach(newParticipant => {
     const existingIndex = merged.findIndex(p => p.name === newParticipant.name);
     if (existingIndex !== -1) {
-      // Update the included status if the participant already exists
-      merged[existingIndex].included = newParticipant.included;
+      // Update the included and pinned status if the participant already exists
+      merged[existingIndex].included = savedParticipants.find(p => p.name === newParticipant.name)?.included ?? true;
+      merged[existingIndex].pinnedTop = savedParticipants.find(p => p.name === newParticipant.name)?.pinnedTop ?? false;
+      merged[existingIndex].pinnedBottom =
+        savedParticipants.find(p => p.name === newParticipant.name)?.pinnedBottom ?? false;
     } else {
       // Add the new participant if it doesn't exist
-      merged.push(newParticipant);
+      merged.push({
+        id: generateUniqueId(),
+        name: newParticipant.name,
+        included: true,
+        pinnedTop: false,
+        pinnedBottom: false,
+      });
     }
   });
 
@@ -42,7 +52,27 @@ export const saveList = async (list: ParticipantsListItem[], url: string): Promi
 };
 
 export const sortByStatus = (list: ParticipantsListItem[]): ParticipantsListItem[] => {
-  const included = list.filter(el => el.included);
-  const excluded = list.filter(el => !el.included);
-  return [...included, ...excluded];
+  return list.sort((a, b) => {
+    if (a.pinnedTop && !b.pinnedTop) return -1;
+    if (!a.pinnedTop && b.pinnedTop) return 1;
+    if (!a.included && b.included) return 1;
+    if (a.included && !b.included) return -1;
+    if (a.pinnedBottom && !b.pinnedBottom) return 1;
+    if (!a.pinnedBottom && b.pinnedBottom) return -1;
+    return 0;
+  });
+};
+
+export const generateUniqueId = (): string => {
+  return uuidv4();
+};
+
+export const generateListString = (participants: ParticipantsListItem[], prefix = '', postfix = '', marker = '') => {
+  const list = participants
+    .map((p, index) => {
+      const markerMasked = marker.replaceAll('#', String(index + 1));
+      return `${markerMasked || index + 1 + '.'} ${p.name}`;
+    })
+    .join('\n');
+  return `${prefix}\n${list}\n${postfix}`;
 };

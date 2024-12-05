@@ -1,16 +1,21 @@
-import { toggleTheme } from '@src/toggleTheme';
 import { waitForElement } from './utils';
 
-console.log('content script loaded 3');
-
-void toggleTheme();
-
 function getParticipants() {
-  const participantElements = document.querySelectorAll('[data-participant-id] [jscontroller="LxQ0Q"]');
+  // const tooManyParticipants = document.querySelector('.wOmdle');
+  const participantElements = document.querySelectorAll('[data-participant-id]');
+
+  // if (tooManyParticipants) {
+  //   chrome.runtime.sendMessage({ action: 'tooManyParticipants' });
+  //   participantElements = document.querySelectorAll('[data-participant-id]');
+  // }
 
   return Array.from(participantElements)
-    .map(el => el.textContent || '')
-    .map(name => ({ name, included: true }));
+    .map(el => {
+      const ariaLabel = el.getAttribute('aria-label');
+      const name = ariaLabel || el.querySelector('[jscontroller="LxQ0Q"]')?.textContent || '';
+      return { name, included: true };
+    })
+    .filter(Boolean);
 }
 
 function getMeetId() {
@@ -27,7 +32,6 @@ const observeDOMChanges = async () => {
   const targetNode = await waitForElement('.uGOf1d'); // Replace with the actual class or ID
 
   const config = { characterData: true, subtree: true };
-
   const callback = (mutationsList: MutationRecord[]) => {
     for (const mutation of mutationsList) {
       if (mutation.type === 'characterData') {
@@ -52,7 +56,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'sendToChat') {
     const chatInput = document.getElementById('bfTqV') as HTMLInputElement;
 
-    console.log('chatInput', chatInput);
     if (!chatInput) {
       const openChatButton = document.querySelector('[jscontroller="S5EFRd"] [jsname="A5il2e"]') as HTMLButtonElement;
       if (!openChatButton) {
@@ -72,9 +75,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           const event = new Event('input', { bubbles: true });
           chatInput.dispatchEvent(event);
 
-          console.log('CLIKK bb', sendButton);
           if (sendButton && sendButton instanceof HTMLButtonElement) {
-            console.log('CLIKK');
             setTimeout(() => {
               sendButton.click();
             }, 1000);
