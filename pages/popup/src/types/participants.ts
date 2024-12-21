@@ -5,4 +5,5 @@ export type ParticipantsListItem = {
   pinnedTop?: boolean;
   pinnedBottom?: boolean;
   isAddedManually?: boolean;
+  isVisible?: boolean;
 };

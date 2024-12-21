@@ -13,7 +13,6 @@ const Popup = () => {
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const { setTheme, isLightTheme: isLightMode, isSelectedByUser } = useUIStore();
 
-  console.log('is selected by user', isSelectedByUser);
   useEffect(() => {
     if (isSelectedByUser) {
       return;

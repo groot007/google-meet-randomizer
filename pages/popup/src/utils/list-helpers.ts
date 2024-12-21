@@ -24,7 +24,9 @@ export const generateListString = (participants: ParticipantsListItem[], prefix 
       return `${markerMasked || index + 1 + '.'} ${p.name}`;
     })
     .join('\n');
-  return `${prefix}\n${list}\n${postfix}`;
+  const textBeforeList = prefix ? `${prefix}\n` : '';
+  const textAfterList = postfix ? `\n${postfix}` : '';
+  return `${textBeforeList}${list}${textAfterList}`;
 };
 
 export const getUniqueParticipants = (participants: ParticipantsListItem[]): ParticipantsListItem[] => {

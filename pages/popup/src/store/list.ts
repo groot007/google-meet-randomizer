@@ -14,8 +14,6 @@ type ParticipantsState = {
     }
   >;
   setParticipants: (url: string, participants: ParticipantsListItem[]) => void;
-  addParticipants: (url: string, participants: ParticipantsListItem[]) => void;
-  updateParticipant: (url: string, id: string, participant: Partial<ParticipantsListItem>) => void;
   deleteParticipant: (url: string, id: string) => void;
   toggleInclude: (url: string, id: string) => void;
   togglePinTop: (url: string, id: string) => void;
@@ -30,13 +28,44 @@ export const useParticipantsStore = create(
       urlStores: {},
       setParticipants: (url, participants) =>
         set(state => {
+          const existingParticipants = state.urlStores[url]?.participants || [];
           const uniqueParticipants = getUniqueParticipants(participants);
+
+          // Handle manually added participants
+          const manuallyAddedParticipants = uniqueParticipants.map(newParticipant => {
+            const existingParticipant = existingParticipants.find(p => p.name === newParticipant.name);
+            if (newParticipant.isAddedManually) {
+              return existingParticipant ? { ...existingParticipant, isVisible: true } : newParticipant;
+            }
+            return newParticipant;
+          });
+
+          // Handle non-manually added participants
+          const nonManuallyAddedParticipants = existingParticipants.map(existingParticipant => {
+            const newParticipant = uniqueParticipants.find(
+              p => p.name === existingParticipant.name && !p.isAddedManually,
+            );
+
+            if (!newParticipant && !existingParticipant.isAddedManually) {
+              return { ...existingParticipant, isVisible: false };
+            }
+            return existingParticipant;
+          });
+
+          // Combine results and remove duplicates
+          const allParticipants = getUniqueParticipants([
+            ...manuallyAddedParticipants,
+            ...nonManuallyAddedParticipants,
+          ]);
+
+          console.log('allParticipants', allParticipants);
+
           return {
             urlStores: {
               ...state.urlStores,
               [url]: {
-                participants: sortByStatus(uniqueParticipants),
-                selectAllChecked: participants.every(p => p.included),
+                participants: sortByStatus(allParticipants),
+                selectAllChecked: allParticipants.every(p => p.included),
               },
             },
           };
@@ -56,37 +85,6 @@ export const useParticipantsStore = create(
           };
         });
       },
-      addParticipants: (url, participants) =>
-        set(state => {
-          const urlStore = state.urlStores[url] || { participants: [], selectAllChecked: false };
-          const uniqueParticipants = getUniqueParticipants([...urlStore.participants, ...participants]);
-          return {
-            urlStores: {
-              ...state.urlStores,
-              [url]: {
-                ...urlStore,
-                participants: sortByStatus([...uniqueParticipants]), // Ensure new array reference
-              },
-            },
-          };
-        }),
-      updateParticipant: (url, id, participant) =>
-        set(state => {
-          const urlStore = state.urlStores[url];
-          if (!urlStore) return state;
-
-          return {
-            urlStores: {
-              ...state.urlStores,
-              [url]: {
-                ...urlStore,
-                participants: sortByStatus(
-                  urlStore.participants.map(p => (p.id === id ? { ...p, ...participant } : p)),
-                ),
-              },
-            },
-          };
-        }),
       deleteParticipant: (url, id) =>
         set(state => {
           const urlStore = state.urlStores[url];
@@ -97,7 +95,9 @@ export const useParticipantsStore = create(
               ...state.urlStores,
               [url]: {
                 ...urlStore,
-                participants: sortByStatus(urlStore.participants.filter(p => p.id !== id)),
+                participants: sortByStatus(
+                  urlStore.participants.map(p => (p.id === id ? { ...p, isVisible: false } : p)),
+                ),
               },
             },
           };
@@ -188,7 +188,6 @@ export const useUrlParticipants = (url: string) => {
   const participants = useParticipantsStore(useShallow(state => state.urlStores[url]?.participants || []));
   const selectAllChecked = useParticipantsStore(useShallow(state => state.urlStores[url]?.selectAllChecked || false));
   const setParticipants = useParticipantsStore(useShallow(state => state.setParticipants));
-  const addParticipants = useParticipantsStore(useShallow(state => state.addParticipants));
   const deleteParticipant = useParticipantsStore(useShallow(state => state.deleteParticipant));
   const toggleInclude = useParticipantsStore(useShallow(state => state.toggleInclude));
   const togglePinTop = useParticipantsStore(useShallow(state => state.togglePinTop));
@@ -200,7 +199,6 @@ export const useUrlParticipants = (url: string) => {
     participants,
     selectAllChecked,
     setParticipants: (participants: ParticipantsListItem[]) => setParticipants(url, participants),
-    addParticipants: (participants: ParticipantsListItem[]) => addParticipants(url, participants),
     deleteParticipant: (id: string) => deleteParticipant(url, id),
     toggleInclude: (id: string) => toggleInclude(url, id),
     togglePinTop: (id: string) => togglePinTop(url, id),

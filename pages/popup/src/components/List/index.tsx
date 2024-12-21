@@ -1,6 +1,6 @@
 import { type ParticipantsListItem } from '@src/types';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
-import { FaArrowDown, FaThumbtack, FaTimes } from 'react-icons/fa';
+import { FaArrowDown, FaThumbtack, FaTimes, FaUserTag } from 'react-icons/fa';
 
 type ListProps = {
   items: ParticipantsListItem[];
@@ -12,12 +12,14 @@ type ListProps = {
 
 const List = ({ items, onToggleInclude, onDelete, onTogglePinTop, onTogglePinBottom }: ListProps) => {
   const [animationParent] = useAutoAnimate();
+  const visibleItems = items.filter(item => item.isVisible);
 
   return (
     <ul ref={animationParent}>
-      {items.map(item => (
+      {visibleItems.map(item => (
         <li
           key={item.id}
+          data-id={item.id}
           className={`flex items-center justify-between border-b border-gray-600 p-2 hover:opacity-95 ${
             !item.included ? 'opacity-50' : ''
           }`}>
@@ -42,7 +44,11 @@ const List = ({ items, onToggleInclude, onDelete, onTogglePinTop, onTogglePinBot
                 onChange={() => onToggleInclude(item.id)}
               />
             </div>
+
             <span className="break-all text-left text-base">{item.name}</span>
+            <span title="Added manually" className="ml-3">
+              {item.isAddedManually && <FaUserTag />}
+            </span>
           </div>
           <div className="flex items-center">
             <button

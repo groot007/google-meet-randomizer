@@ -3,7 +3,7 @@ import { withErrorBoundary, withSuspense } from '@extension/shared';
 import List from '../List';
 import { useCallback, useEffect, useState } from 'react';
 import { useCurrentUrl } from '../../hooks';
-import { generateListString, shuffleArray } from '../../utils';
+import { generateListString, generateUniqueId, shuffleArray } from '../../utils';
 import { FaRandom, FaClipboard, FaPaperPlane, FaRegTrashAlt } from 'react-icons/fa';
 import { RiCheckboxMultipleBlankLine, RiCheckboxMultipleLine } from 'react-icons/ri';
 import { useSettingsStore } from '@src/store/settings';
@@ -26,7 +26,6 @@ const MainContent = () => {
   const {
     participants,
     setParticipants,
-    addParticipants,
     deleteParticipant,
     toggleInclude,
     selectAllChecked,
@@ -45,7 +44,16 @@ const MainContent = () => {
         if (currentTab?.id) {
           chrome.tabs.sendMessage(currentTab.id, { action: 'getParticipants' }, response => {
             if (response && response.participants) {
-              setParticipants(response.participants);
+              const participants = response.participants.map((p: ParticipantsListItem) => ({
+                name: p.name,
+                included: true,
+                pinnedTop: false,
+                pinnedBottom: false,
+                id: generateUniqueId(),
+                isVisible: true,
+              }));
+
+              setParticipants(participants);
             }
           });
         }
@@ -60,7 +68,14 @@ const MainContent = () => {
 
     chrome.runtime.onMessage.addListener(async request => {
       if (request.action === 'updateParticipants') {
-        const updatedList = request.participants;
+        const updatedList = request.participants.map((p: ParticipantsListItem) => ({
+          name: p.name,
+          included: true,
+          pinnedTop: false,
+          pinnedBottom: false,
+          id: generateUniqueId(),
+          isVisible: true,
+        }));
 
         if (updatedList) {
           setParticipants(updatedList);
@@ -76,9 +91,9 @@ const MainContent = () => {
 
   const handleAddParticipants = useCallback(
     (participants: ParticipantsListItem[]) => {
-      addParticipants(participants);
+      setParticipants(participants);
     },
-    [addParticipants],
+    [setParticipants],
   );
 
   const shuffleList = useCallback(() => {
@@ -101,7 +116,7 @@ const MainContent = () => {
   };
 
   const sendToChat = () => {
-    const filteredList = participants.filter(p => p.included);
+    const filteredList = participants.filter(p => p.included && p.isVisible);
     const formattedList = generateListString(filteredList, listPrefix, listPostfix, listItemMarker);
     chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
       const currentTab = tabs[0];
@@ -177,7 +192,7 @@ const MainContent = () => {
                 <RiCheckboxMultipleBlankLine size={18} className="text-white" />
               )}
             </button>
-            <h1 className="text-lg font-bold">Participants ({participants.length}): </h1>
+            <h1 className="text-lg font-bold">Participants ({participants.filter(p => p.isVisible).length}): </h1>
             <button
               onClick={removeAllParticipants}
               className="ml-auto mr-2 select-none text-red-500 hover:cursor-pointer hover:text-red-700">
