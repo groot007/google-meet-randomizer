@@ -2,13 +2,11 @@ import '@src/Popup.css';
 import { withErrorBoundary, withSuspense } from '@extension/shared';
 import { FaMoon, FaAdjust } from 'react-icons/fa';
 import { useSettingsStore } from '@src/store/settings';
+import { useUIStore } from '@src/store/ui';
 
-type SettingsProps = {
-  onThemeToggle: () => void;
-  isLightTheme: boolean;
-};
+const Settings = () => {
+  const { isLightTheme, setTheme } = useUIStore();
 
-const Settings = ({ onThemeToggle, isLightTheme }: SettingsProps) => {
   const { listPrefix, listPostfix, listItemMarker, setListPrefix, setListPostfix, setListItemMarker } =
     useSettingsStore();
 
@@ -16,8 +14,10 @@ const Settings = ({ onThemeToggle, isLightTheme }: SettingsProps) => {
     <div className="relative flex flex-col items-center justify-center">
       <h1 className="text-lg font-bold">Settings</h1>
       <button
-        onClick={onThemeToggle}
-        className={`absolute right-0 top-0 mt-0 flex h-7 w-7 items-center justify-center rounded ${isLightTheme ? 'text-black' : 'text-white'}`}>
+        onClick={() => {
+          setTheme(isLightTheme ? 'dark' : 'light', true);
+        }}
+        className={`absolute right-0 top-0 mt-0 flex size-7 items-center justify-center rounded ${isLightTheme ? 'text-black' : 'text-white'}`}>
         {isLightTheme ? <FaMoon size={16} /> : <FaAdjust size={16} />}
       </button>
       <div className="mt-4 space-y-4">

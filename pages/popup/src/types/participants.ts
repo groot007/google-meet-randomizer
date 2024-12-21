@@ -4,4 +4,5 @@ export type ParticipantsListItem = {
   included: boolean;
   pinnedTop?: boolean;
   pinnedBottom?: boolean;
+  isAddedManually?: boolean;
 };

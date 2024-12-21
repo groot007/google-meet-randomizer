@@ -2,56 +2,83 @@ import '@src/Popup.css';
 import { withErrorBoundary, withSuspense } from '@extension/shared';
 import List from '../List';
 import { useCallback, useEffect, useState } from 'react';
-import { useParticipants, useCurrentUrl } from '../../hooks';
-import { generateListString, generateUniqueId, shuffleArray } from '../../utils';
-import { FaRandom, FaClipboard, FaPaperPlane, FaPlus, FaChevronUp } from 'react-icons/fa';
+import { useCurrentUrl } from '../../hooks';
+import { generateListString, shuffleArray } from '../../utils';
+import { FaRandom, FaClipboard, FaPaperPlane, FaRegTrashAlt } from 'react-icons/fa';
 import { RiCheckboxMultipleBlankLine, RiCheckboxMultipleLine } from 'react-icons/ri';
 import { useSettingsStore } from '@src/store/settings';
+import { ControlButton } from '../ControlButton';
+import { AddParticipantsForm } from '@src/AddParticipantForm';
+import { type ParticipantsListItem } from '@src/types';
+import { useUrlParticipants } from '@src/store/list';
+import { useUIStore } from '@src/store/ui';
 
-type MainContentProps = {
-  isLightTheme: boolean;
-};
-
-const MainContent = ({ isLightTheme }: MainContentProps) => {
-  const [newParticipants, setNewParticipants] = useState<string>('');
+const MainContent = () => {
   const [showTooltip, setShowTooltip] = useState<boolean>(false);
   const [showSendingTooltip, setShowSendingTooltip] = useState<boolean>(false);
-  const [showAddParticipant, setShowAddParticipant] = useState<boolean>(false);
   const { listPrefix, listPostfix, listItemMarker } = useSettingsStore();
+  const isLightTheme = useUIStore(state => state.isLightTheme);
   const [isControlsDisabled, setIsControlsDisabled] = useState<boolean>(false);
 
   const currentUrl = useCurrentUrl();
+  const isGoogleMeet = currentUrl.includes('meet.google.com');
+  const isSendToChatDisabled = isControlsDisabled || !isGoogleMeet;
   const {
     participants,
+    setParticipants,
     addParticipants,
-    selectAllChecked,
-    toggleSelectAll,
+    deleteParticipant,
     toggleInclude,
+    selectAllChecked,
+    setSelectAllChecked,
+    toggleSelectAll,
     togglePinTop,
     togglePinBottom,
-    deleteParticipant,
-    setParticipants,
-  } = useParticipants(currentUrl);
+  } = useUrlParticipants(currentUrl);
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      const participantNames = newParticipants
-        .split('\n')
-        .map(name => name.trim())
-        .filter(name => name !== '')
-        .map(name => ({ name, included: true, pinnedTop: false, pinnedBottom: false, id: generateUniqueId() }));
+  useEffect(() => {
+    if (!currentUrl.includes('meet.google.com')) return;
 
-      if (participantNames.length === 0) {
-        return;
+    const fetchParticipants = async () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+        const currentTab = tabs[0];
+        if (currentTab?.id) {
+          chrome.tabs.sendMessage(currentTab.id, { action: 'getParticipants' }, response => {
+            if (response && response.participants) {
+              setParticipants(response.participants);
+            }
+          });
+        }
+      });
+    };
+
+    fetchParticipants();
+  }, [currentUrl]);
+
+  useEffect(() => {
+    if (!currentUrl.includes('meet.google.com')) return;
+
+    chrome.runtime.onMessage.addListener(async request => {
+      if (request.action === 'updateParticipants') {
+        const updatedList = request.participants;
+
+        if (updatedList) {
+          setParticipants(updatedList);
+        }
       }
+    });
+  }, [setParticipants, currentUrl]);
 
-      console.log('participantNames', participantNames);
+  useEffect(() => {
+    const allSelected = participants.every(p => p.included);
+    setSelectAllChecked(allSelected);
+  }, [participants, setSelectAllChecked]);
 
-      addParticipants(participantNames);
-      setNewParticipants('');
+  const handleAddParticipants = useCallback(
+    (participants: ParticipantsListItem[]) => {
+      addParticipants(participants);
     },
-    [addParticipants, newParticipants],
+    [addParticipants],
   );
 
   const shuffleList = useCallback(() => {
@@ -62,7 +89,6 @@ const MainContent = ({ isLightTheme }: MainContentProps) => {
     const shuffledUnpinned = shuffleArray(unpinnedParticipants);
     const shuffledList = [...pinnedTopParticipants, ...shuffledUnpinned, ...pinnedBottomParticipants];
     setParticipants(shuffledList);
-    // saveList(shuffledList, currentUrl);
   }, [participants, setParticipants]);
 
   const copyToClipboard = () => {
@@ -93,6 +119,10 @@ const MainContent = ({ isLightTheme }: MainContentProps) => {
     });
   };
 
+  const removeAllParticipants = () => {
+    setParticipants([]);
+  };
+
   useEffect(() => {
     setIsControlsDisabled(participants.length === 0);
   }, [participants]);
@@ -100,58 +130,60 @@ const MainContent = ({ isLightTheme }: MainContentProps) => {
   return (
     <div>
       <div className="mb-4 flex justify-end space-x-4">
-        <button
-          title="Select all"
-          onClick={toggleSelectAll}
-          disabled={isControlsDisabled}
-          className={`flex h-9 w-9 items-center rounded bg-gray-400 p-1 ${isControlsDisabled ? 'cursor-not-allowed opacity-50' : ''}`}>
-          {selectAllChecked ? (
-            <RiCheckboxMultipleLine size={46} className="text-white" />
-          ) : (
-            <RiCheckboxMultipleBlankLine size={46} className="text-white" />
-          )}
-        </button>
-        <button
+        <ControlButton
           title="Shuffle List"
           onClick={shuffleList}
           disabled={isControlsDisabled}
-          className={`flex h-9 w-9 items-center justify-center rounded bg-blue-500 p-2 text-white ${isControlsDisabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-blue-600'}`}>
-          <FaRandom size={18} />
-        </button>
+          icon={<FaRandom size={18} />}
+          variant="blue"
+        />
 
-        <div className="relative">
-          <button
-            title="Copy to Clipboard"
-            onClick={copyToClipboard}
-            disabled={isControlsDisabled}
-            className={`flex h-9 w-9 items-center justify-center rounded bg-green-500 p-2 text-white ${isControlsDisabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-green-600'}`}>
-            <FaClipboard size={18} />
-          </button>
-          {showTooltip && (
-            <div className="absolute top-full mt-1 w-max rounded bg-black p-1 text-xs text-white">Copied!</div>
-          )}
-        </div>
+        <ControlButton
+          title="Copy to Clipboard"
+          onClick={copyToClipboard}
+          disabled={isControlsDisabled}
+          icon={<FaClipboard size={18} />}
+          variant="green"
+          showTooltip={showTooltip}
+          tooltipText="Copied!"
+        />
 
-        <div className="relative">
-          <button
-            title="Send to Google meet chat"
-            onClick={sendToChat}
-            disabled={isControlsDisabled}
-            className={`flex h-9 w-9 items-center justify-center rounded bg-purple-500 p-2 text-white ${isControlsDisabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-purple-600'}`}>
-            <FaPaperPlane size={18} />
-          </button>
-          {showSendingTooltip && (
-            <div className="absolute top-full mt-1 w-max rounded bg-black p-1 text-xs text-white">Sent!</div>
-          )}
-        </div>
+        <ControlButton
+          title="Send to Google meet chat"
+          onClick={sendToChat}
+          disabled={isSendToChatDisabled}
+          icon={<FaPaperPlane size={18} />}
+          variant="purple"
+          showTooltip={showSendingTooltip}
+          tooltipText="Sent!"
+        />
       </div>
       {participants.length === 0 && (
         <div className="mt-7">No participants found. Open Google meet tab or add items manually</div>
       )}
       {participants.length > 0 && (
-        <>
-          <h1 className="text-lg font-bold">Participants: </h1>
-
+        <div>
+          <div className="flex items-center justify-between">
+            <div className="mr-2 size-5"></div>
+            <div className="mr-2 size-5"></div>
+            <button
+              title="Select all"
+              onClick={toggleSelectAll}
+              disabled={isControlsDisabled}
+              className={`mr-3 flex size-5 items-center rounded ${isControlsDisabled ? 'cursor-not-allowed opacity-50' : ''}`}>
+              {selectAllChecked ? (
+                <RiCheckboxMultipleLine size={18} className="text-white" />
+              ) : (
+                <RiCheckboxMultipleBlankLine size={18} className="text-white" />
+              )}
+            </button>
+            <h1 className="text-lg font-bold">Participants ({participants.length}): </h1>
+            <button
+              onClick={removeAllParticipants}
+              className="ml-auto mr-2 select-none text-red-500 hover:cursor-pointer hover:text-red-700">
+              <FaRegTrashAlt size={16} />
+            </button>
+          </div>
           <div className={`custom-scrollbar max-h-[300px] ${participants.length > 7 ? 'overflow-y-auto' : ''}`}>
             <List
               items={participants}
@@ -161,32 +193,9 @@ const MainContent = ({ isLightTheme }: MainContentProps) => {
               onDelete={deleteParticipant}
             />
           </div>
-        </>
+        </div>
       )}
-      <div className="mb-0 mt-4 flex items-center justify-center">
-        <button
-          onClick={() => setShowAddParticipant(!showAddParticipant)}
-          className="flex items-center justify-center rounded bg-gray-500 p-2 text-white hover:bg-gray-600">
-          {showAddParticipant ? <FaChevronUp /> : <FaPlus />}
-        </button>
-      </div>
-
-      {showAddParticipant && (
-        <form onSubmit={handleSubmit} className="mt-4">
-          <textarea
-            value={newParticipants}
-            onChange={e => setNewParticipants(e.target.value)}
-            className={`w-full rounded border p-2 ${isLightTheme ? 'border-gray-300 text-black' : 'border-gray-600 bg-gray-700 text-white'}`}
-            placeholder="Add new participants, one per line"
-            rows={3}
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-          />
-          <button type="submit" className="mt-2 w-full rounded bg-blue-500 p-2 text-white hover:bg-blue-600">
-            Add Participant
-          </button>
-        </form>
-      )}
+      <AddParticipantsForm isLightTheme={isLightTheme} onSubmit={handleAddParticipants} />
     </div>
   );
 };

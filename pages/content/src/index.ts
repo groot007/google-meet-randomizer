@@ -8,14 +8,16 @@ function getParticipants() {
   //   chrome.runtime.sendMessage({ action: 'tooManyParticipants' });
   //   participantElements = document.querySelectorAll('[data-participant-id]');
   // }
-
-  return Array.from(participantElements)
+  const arr = Array.from(participantElements)
     .map(el => {
       const ariaLabel = el.getAttribute('aria-label');
       const name = ariaLabel || el.querySelector('[jscontroller="LxQ0Q"]')?.textContent || '';
-      return { name, included: true };
+      if (!name) return null;
+      return { name };
     })
     .filter(Boolean);
+
+  return [...new Set(arr)];
 }
 
 function getMeetId() {

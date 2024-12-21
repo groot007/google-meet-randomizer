@@ -1,10 +1,10 @@
 {
   "extensionDescription": {
-    "description": "Google Meet participants randomizer",
+    "description": "This extension helps create a random list of participants for Google Meet",
     "message": "Chrome extension to create random list of participants for Google Meet"
   },
   "extensionName": {
-    "description": "Google Meet participants randomizer",
-    "message": "Create a random list of participants"
+    "description": "ShuffleMeet: Google Meet randomizer",
+    "message": "ShuffleMeet: Google Meet randomizer"
   }
 }

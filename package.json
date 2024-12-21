@@ -1,7 +1,7 @@
 {
   "name": "google-meet-participants-randomizer",
-  "version": "0.4.0",
-  "description": "randomizer",
+  "version": "0.4.2",
+  "description": "ShuffleMeet",
   "license": "MIT",
   "repository": {
     "type": "git",

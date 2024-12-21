@@ -2,21 +2,28 @@ import chromeStorage from '@src/utils/chromeStorage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-type SettingsState = {
-  isLightTheme: string;
-  isDarkTheme: string;
-  setTheme: (theme: 'dark' | 'light') => void;
+type UIState = {
+  theme: 'dark' | 'light';
+  isLightTheme: boolean;
+  isDarkTheme: boolean;
+  isSelectedByUser: boolean;
+  setTheme: (theme: 'dark' | 'light', setByUser?: boolean) => void;
 };
 
-export const useSettingsStore = create(
-  persist<SettingsState>(
+export const useUIStore = create(
+  persist<UIState>(
     set => ({
-      isLightTheme: '',
-      isDarkTheme: '',
-      setTheme: theme =>
-        set(() => {
-          theme === 'light' ? 'dark' : 'light';
-        }),
+      theme: 'light',
+      isLightTheme: true,
+      isDarkTheme: false,
+      isSelectedByUser: false,
+      setTheme: (theme, setByUser) =>
+        set(() => ({
+          isSelectedByUser: setByUser,
+          theme: theme,
+          isLightTheme: theme === 'light',
+          isDarkTheme: theme === 'dark',
+        })),
     }),
     {
       name: 'settings-storage',
