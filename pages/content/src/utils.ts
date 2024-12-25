@@ -25,3 +25,47 @@ export const waitForElement = (selector: string): Promise<Element> => {
     }
   });
 };
+
+export const triggerClick = (element: Element | null): Promise<void> => {
+  return new Promise(resolve => {
+    if (!element) {
+      resolve();
+      return;
+    }
+
+    const clickEvent = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+    });
+
+    // First click
+    element.dispatchEvent(clickEvent);
+
+    // Second click with delay
+    setTimeout(() => {
+      element.dispatchEvent(clickEvent);
+      resolve();
+    }, 0);
+  });
+};
+
+export function isElementVisible(el) {
+  const rect = el.getBoundingClientRect(),
+    vWidth = window.innerWidth || document.documentElement.clientWidth,
+    vHeight = window.innerHeight || document.documentElement.clientHeight,
+    efp = function (x, y) {
+      return document.elementFromPoint(x, y);
+    };
+
+  // Return false if it's not in the viewport
+  if (rect.right < 0 || rect.bottom < 0 || rect.left > vWidth || rect.top > vHeight) return false;
+
+  // Return true if any of its four corners are visible
+  return (
+    el.contains(efp(rect.left, rect.top)) ||
+    el.contains(efp(rect.right, rect.top)) ||
+    el.contains(efp(rect.right, rect.bottom)) ||
+    el.contains(efp(rect.left, rect.bottom))
+  );
+}

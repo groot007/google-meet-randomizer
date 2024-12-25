@@ -3,9 +3,12 @@ import { withErrorBoundary, withSuspense } from '@extension/shared';
 import { FaMoon, FaAdjust } from 'react-icons/fa';
 import { useSettingsStore } from '@src/store/settings';
 import { useUIStore } from '@src/store/ui';
+import { getExtensionVersion, isDevMode } from '@src/utils/other';
 
 const Settings = () => {
   const { isLightTheme, setTheme } = useUIStore();
+  const isDev = isDevMode();
+  const version = getExtensionVersion();
 
   const { listPrefix, listPostfix, listItemMarker, setListPrefix, setListPostfix, setListItemMarker } =
     useSettingsStore();
@@ -65,6 +68,12 @@ const Settings = () => {
             />
           </div>
         </div>
+
+        <footer className="flex justify-end">
+          <span>
+            v{version} {isDev ? '(dev)' : ''}
+          </span>
+        </footer>
       </div>
     </div>
   );

@@ -50,13 +50,15 @@ const List = ({ items, onToggleInclude, onDelete, onTogglePinTop, onTogglePinBot
               {item.isAddedManually && <FaUserTag />}
             </span>
           </div>
-          <div className="flex items-center">
-            <button
-              onClick={() => onDelete(item.id)}
-              className="ml-4 select-none text-red-500 hover:cursor-pointer hover:text-red-700">
-              <FaTimes size={16} />
-            </button>
-          </div>
+          {item.isAddedManually && (
+            <div className="flex items-center">
+              <button
+                onClick={() => onDelete(item.id)}
+                className="ml-4 select-none text-red-500 hover:cursor-pointer hover:text-red-700">
+                <FaTimes size={16} />
+              </button>
+            </div>
+          )}
         </li>
       ))}
     </ul>

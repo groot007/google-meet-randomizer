@@ -13,26 +13,59 @@ type ParticipantsState = {
       selectAllChecked: boolean;
     }
   >;
-  setParticipants: (url: string, participants: ParticipantsListItem[]) => void;
+  setParticipants: (url: string, participants: ParticipantsListItem[], observer?: boolean) => void;
   deleteParticipant: (url: string, id: string) => void;
   toggleInclude: (url: string, id: string) => void;
   togglePinTop: (url: string, id: string) => void;
   togglePinBottom: (url: string, id: string) => void;
   toggleSelectAll: (url: string) => void;
   setSelectAllChecked: (url: string, selectAllChecked: boolean) => void;
+  cleanStorage: (url: string) => void;
 };
 
 export const useParticipantsStore = create(
   persist<ParticipantsState>(
     set => ({
       urlStores: {},
-      setParticipants: (url, participants) =>
+      setParticipants: (url, participants, observerAdded) =>
         set(state => {
-          const existingParticipants = state.urlStores[url]?.participants || [];
-          const uniqueParticipants = getUniqueParticipants(participants);
+          let existingParticipants = [...(state.urlStores[url]?.participants || [])];
+          const updatedList = getUniqueParticipants(participants);
+
+          const newParticipants = [] as ParticipantsListItem[];
+          console.log('IS OVE', observerAdded);
+          if (observerAdded) {
+            updatedList.forEach(updatedParticipant => {
+              const oldParticipant = existingParticipants.find(p => p.name === updatedParticipant.name);
+              if (!oldParticipant) {
+                newParticipants.push(updatedParticipant);
+              } else {
+                existingParticipants = existingParticipants.map(participant => {
+                  if (participant.isAddedManually) return participant;
+
+                  return {
+                    ...participant,
+                    isVisible: updatedList.some(p => p.name === participant.name) ? true : false,
+                  };
+                });
+              }
+
+              return;
+            });
+
+            return {
+              urlStores: {
+                ...state.urlStores,
+                [url]: {
+                  participants: sortByStatus(getUniqueParticipants([...newParticipants, ...existingParticipants])),
+                  selectAllChecked: updatedList.every(p => p.included),
+                },
+              },
+            };
+          }
 
           // Handle manually added participants
-          const manuallyAddedParticipants = uniqueParticipants.map(newParticipant => {
+          const manuallyAddedParticipants = updatedList.map(newParticipant => {
             const existingParticipant = existingParticipants.find(p => p.name === newParticipant.name);
             if (newParticipant.isAddedManually) {
               return existingParticipant ? { ...existingParticipant, isVisible: true } : newParticipant;
@@ -40,23 +73,8 @@ export const useParticipantsStore = create(
             return newParticipant;
           });
 
-          // Handle non-manually added participants
-          const nonManuallyAddedParticipants = existingParticipants.map(existingParticipant => {
-            const newParticipant = uniqueParticipants.find(
-              p => p.name === existingParticipant.name && !p.isAddedManually,
-            );
-
-            if (!newParticipant && !existingParticipant.isAddedManually) {
-              return { ...existingParticipant, isVisible: false };
-            }
-            return existingParticipant;
-          });
-
           // Combine results and remove duplicates
-          const allParticipants = getUniqueParticipants([
-            ...manuallyAddedParticipants,
-            ...nonManuallyAddedParticipants,
-          ]);
+          const allParticipants = getUniqueParticipants([...manuallyAddedParticipants, ...existingParticipants]);
 
           console.log('allParticipants', allParticipants);
 
@@ -80,6 +98,19 @@ export const useParticipantsStore = create(
               [url]: {
                 ...urlStore,
                 selectAllChecked: selectAllChecked,
+              },
+            },
+          };
+        });
+      },
+      cleanStorage: url => {
+        set(state => {
+          return {
+            urlStores: {
+              ...state.urlStores,
+              [url]: {
+                participants: [],
+                selectAllChecked: false,
               },
             },
           };
@@ -194,11 +225,16 @@ export const useUrlParticipants = (url: string) => {
   const togglePinBottom = useParticipantsStore(useShallow(state => state.togglePinBottom));
   const toggleSelectAll = useParticipantsStore(useShallow(state => state.toggleSelectAll));
   const setSelectAllChecked = useParticipantsStore(useShallow(state => state.setSelectAllChecked));
+  const cleanStorage = useParticipantsStore(useShallow(state => state.cleanStorage));
 
   return {
     participants,
     selectAllChecked,
-    setParticipants: (participants: ParticipantsListItem[]) => setParticipants(url, participants),
+    cleanStorage: () => cleanStorage(url),
+    setParticipants: (participants: ParticipantsListItem[], observer?: boolean) => {
+      console.log('IS _B_V__V_V_V__V', observer);
+      return setParticipants(url, participants, observer);
+    },
     deleteParticipant: (id: string) => deleteParticipant(url, id),
     toggleInclude: (id: string) => toggleInclude(url, id),
     togglePinTop: (id: string) => togglePinTop(url, id),

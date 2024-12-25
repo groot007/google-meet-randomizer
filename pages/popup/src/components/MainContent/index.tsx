@@ -8,7 +8,7 @@ import { FaRandom, FaClipboard, FaPaperPlane, FaRegTrashAlt } from 'react-icons/
 import { RiCheckboxMultipleBlankLine, RiCheckboxMultipleLine } from 'react-icons/ri';
 import { useSettingsStore } from '@src/store/settings';
 import { ControlButton } from '../ControlButton';
-import { AddParticipantsForm } from '@src/AddParticipantForm';
+import { AddParticipantsForm } from '@src/components/AddParticipantForm';
 import { type ParticipantsListItem } from '@src/types';
 import { useUrlParticipants } from '@src/store/list';
 import { useUIStore } from '@src/store/ui';
@@ -33,6 +33,7 @@ const MainContent = () => {
     toggleSelectAll,
     togglePinTop,
     togglePinBottom,
+    cleanStorage,
   } = useUrlParticipants(currentUrl);
 
   useEffect(() => {
@@ -53,7 +54,7 @@ const MainContent = () => {
                 isVisible: true,
               }));
 
-              setParticipants(participants);
+              setParticipants(participants, true);
             }
           });
         }
@@ -77,8 +78,8 @@ const MainContent = () => {
           isVisible: true,
         }));
 
-        if (updatedList) {
-          setParticipants(updatedList);
+        if (updatedList.length) {
+          setParticipants(updatedList, true);
         }
       }
     });
@@ -135,7 +136,7 @@ const MainContent = () => {
   };
 
   const removeAllParticipants = () => {
-    setParticipants([]);
+    cleanStorage();
   };
 
   useEffect(() => {

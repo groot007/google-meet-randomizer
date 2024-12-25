@@ -1,17 +1,68 @@
-import { waitForElement } from './utils';
+import { isElementVisible, triggerClick, waitForElement } from './utils';
+
+interface Selectors {
+  PARTICIPANTS: string;
+  CHAT_INPUT: string;
+  CHAT_SEND_BUTTON: ChatSendButton;
+  TEXT_CONTENT: string;
+  PARTICIPANTS_NUMBER: string;
+  ACTIVE_MEET: string;
+  OPEN_CHAT_BUTTON: string;
+}
+
+interface ChatSendButton {
+  BUTTON: string;
+  PARENT: string;
+}
+
+const SELECTORS = {
+  PARTICIPANTS: '[data-participant-id]',
+  CHAT_INPUT: '#bfTqV',
+  CHAT_SEND_BUTTON: {
+    BUTTON: '.yHy1rc',
+    PARENT: '.SjMC3',
+  },
+  TEXT_CONTENT: '[jscontroller="LxQ0Q"]',
+  PARTICIPANTS_NUMBER: '.wOmdle',
+  ACTIVE_MEET: '.uGOf1d',
+  OPEN_CHAT_BUTTON: '[jsname="A5il2e"][data-panel-id="2"]',
+  OPEN_MORE_PEOPLE_BUTTON: '[jsname="A5il2e"][data-panel-id="1"]',
+};
+
+const STORAGE_KEY = 'MEET_SELECTORS';
+
+let MEET_SELECTORS = SELECTORS;
+
+const initSelectors = async () => {
+  try {
+    const result = await chrome.storage.local.get(STORAGE_KEY);
+    const storedSelectors = result[STORAGE_KEY] as Partial<Selectors>;
+
+    if (storedSelectors) {
+      MEET_SELECTORS = {
+        ...SELECTORS,
+        ...storedSelectors,
+        CHAT_SEND_BUTTON: {
+          ...SELECTORS.CHAT_SEND_BUTTON,
+          ...(storedSelectors.CHAT_SEND_BUTTON || {}),
+        },
+      };
+    }
+  } catch (error) {
+    console.error('Failed to load selectors:', error);
+  }
+};
+
+// Initialize selectors before using them
+initSelectors();
 
 function getParticipants() {
-  // const tooManyParticipants = document.querySelector('.wOmdle');
-  const participantElements = document.querySelectorAll('[data-participant-id]');
+  const participantElements = document.querySelectorAll(MEET_SELECTORS.PARTICIPANTS);
 
-  // if (tooManyParticipants) {
-  //   chrome.runtime.sendMessage({ action: 'tooManyParticipants' });
-  //   participantElements = document.querySelectorAll('[data-participant-id]');
-  // }
   const arr = Array.from(participantElements)
     .map(el => {
       const ariaLabel = el.getAttribute('aria-label');
-      const name = ariaLabel || el.querySelector('[jscontroller="LxQ0Q"]')?.textContent || '';
+      const name = ariaLabel || el.querySelector(MEET_SELECTORS.TEXT_CONTENT)?.textContent || '';
       if (!name) return null;
       return { name };
     })
@@ -29,9 +80,25 @@ const updateParticipantsList = () => {
   chrome.runtime.sendMessage({ action: 'updateParticipants', participants });
 };
 
+const triggerButtonClicks = async () => {
+  const morePeople = document.querySelector(SELECTORS.OPEN_MORE_PEOPLE_BUTTON);
+  const chatPanel = document.querySelector(SELECTORS.OPEN_CHAT_BUTTON);
+
+  try {
+    await triggerClick(morePeople);
+    await setTimeout(() => {
+      triggerClick(chatPanel);
+    }, 1000);
+  } catch (error) {
+    console.error('Failed to trigger clicks:', error);
+  }
+};
+
 // Watch for DOM changes
 const observeDOMChanges = async () => {
-  const targetNode = await waitForElement('.uGOf1d'); // Replace with the actual class or ID
+  const targetNode = await waitForElement(MEET_SELECTORS.ACTIVE_MEET); // Replace with the actual class or ID
+  // trigger pannels open to have an access to the full participants list
+  await triggerButtonClicks();
 
   const config = { characterData: true, subtree: true };
   const callback = (mutationsList: MutationRecord[]) => {
@@ -56,55 +123,36 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'sendToChat') {
-    const chatInput = document.getElementById('bfTqV') as HTMLInputElement;
+    const chatInput = document.querySelector(MEET_SELECTORS.CHAT_INPUT) as HTMLInputElement;
+    const chatPanel = document.querySelector(SELECTORS.OPEN_CHAT_BUTTON);
 
-    if (!chatInput) {
-      const openChatButton = document.querySelector('[jscontroller="S5EFRd"] [jsname="A5il2e"]') as HTMLButtonElement;
-      if (!openChatButton) {
-        console.error('Open chat button not found');
-        sendResponse({ success: false, error: 'Open chat button not found' });
-        return;
-      }
-      openChatButton.click();
-      // Wait for chatInput to be available
-      waitForElement('#bfTqV')
-        .then(chatInputElement => {
-          console.log('sendButton', 2);
-          const chatInput = chatInputElement as HTMLInputElement;
-          chatInput.value = request.message;
-          const sendButton = chatInput.closest('.SjMC3')?.querySelector('.yHy1rc');
+    if (!isElementVisible(chatInput)) {
+      const clickEvent = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+      });
 
-          const event = new Event('input', { bubbles: true });
-          chatInput.dispatchEvent(event);
-
-          if (sendButton && sendButton instanceof HTMLButtonElement) {
-            setTimeout(() => {
-              sendButton.click();
-            }, 1000);
-            sendResponse({ success: true });
-          } else {
-            sendResponse({ success: false, error: 'Send button not found' });
-          }
-        })
-        .catch(error => {
-          console.error('Chat input not found after opening chat:', error);
-          sendResponse({ success: false, error: 'Chat input not found after opening chat' });
-        });
-    } else {
-      chatInput.value = request.message;
-      const sendButton = chatInput.closest('.SjMC3')?.querySelector('.yHy1rc');
-
-      const event = new Event('input', { bubbles: true });
-      chatInput.dispatchEvent(event);
-
-      if (sendButton && sendButton instanceof HTMLButtonElement) {
-        sendButton.click();
-        sendResponse({ success: true });
-      } else {
-        sendResponse({ success: false, error: 'Send button not found' });
-      }
+      chatPanel?.dispatchEvent(clickEvent);
     }
 
-    sendResponse({ success: true });
+    sendMessage(chatInput, request.message, sendResponse);
   }
 });
+
+function sendMessage(input: Element, message: string, sendResponse: any) {
+  input.value = message;
+  const sendButton = input
+    .closest(MEET_SELECTORS.CHAT_SEND_BUTTON.PARENT)
+    ?.querySelector(MEET_SELECTORS.CHAT_SEND_BUTTON.BUTTON);
+
+  const event = new Event('input', { bubbles: true });
+  input.dispatchEvent(event);
+
+  if (sendButton && sendButton instanceof HTMLButtonElement) {
+    sendButton.click();
+    sendResponse({ success: true });
+  } else {
+    sendResponse({ success: false, error: 'Send button not found' });
+  }
+}
