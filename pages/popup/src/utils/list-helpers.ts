@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import { type ParticipantsListItem } from '@src/types';
 
 export const sortByStatus = (list: ParticipantsListItem[]): ParticipantsListItem[] => {
@@ -11,10 +10,6 @@ export const sortByStatus = (list: ParticipantsListItem[]): ParticipantsListItem
     if (!a.pinnedBottom && b.pinnedBottom) return -1;
     return 0;
   });
-};
-
-export const generateUniqueId = (): string => {
-  return uuidv4();
 };
 
 export const generateListString = (participants: ParticipantsListItem[], prefix = '', postfix = '', marker = '') => {

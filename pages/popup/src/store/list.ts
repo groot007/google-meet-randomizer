@@ -1,9 +1,9 @@
-import chromeStorage from '@src/utils/chromeStorage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { getUniqueParticipants, sortByStatus } from '../utils';
 import { type ParticipantsListItem } from '@src/types';
 import { useShallow } from 'zustand/react/shallow';
+import { chromeStorage } from '@extension/storage/lib/impl/chromeStorage';
 
 type ParticipantsState = {
   urlStores: Record<
@@ -33,7 +33,7 @@ export const useParticipantsStore = create(
           const updatedList = getUniqueParticipants(participants);
 
           const newParticipants = [] as ParticipantsListItem[];
-          console.log('IS OVE', observerAdded);
+
           if (observerAdded) {
             updatedList.forEach(updatedParticipant => {
               const oldParticipant = existingParticipants.find(p => p.name === updatedParticipant.name);
@@ -232,7 +232,6 @@ export const useUrlParticipants = (url: string) => {
     selectAllChecked,
     cleanStorage: () => cleanStorage(url),
     setParticipants: (participants: ParticipantsListItem[], observer?: boolean) => {
-      console.log('IS _B_V__V_V_V__V', observer);
       return setParticipants(url, participants, observer);
     },
     deleteParticipant: (id: string) => deleteParticipant(url, id),

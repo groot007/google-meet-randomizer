@@ -1,4 +1,4 @@
-import chromeStorage from '@src/utils/chromeStorage';
+import { chromeStorage } from '@extension/storage/lib/impl/chromeStorage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 

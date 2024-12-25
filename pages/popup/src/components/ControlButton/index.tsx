@@ -37,7 +37,7 @@ export const ControlButton = ({
         {icon}
       </button>
       {showTooltip && tooltipText && (
-        <div className="absolute top-full mt-1 w-max rounded bg-black p-1 text-xs text-white">{tooltipText}</div>
+        <div className="absolute top-full z-10 mt-1 w-max rounded bg-black p-1 text-xs text-white">{tooltipText}</div>
       )}
     </div>
   );

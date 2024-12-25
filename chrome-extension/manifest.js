@@ -3,15 +3,6 @@ import deepmerge from 'deepmerge';
 
 const packageJson = JSON.parse(fs.readFileSync('../package.json', 'utf8'));
 
-// const isFirefox = process.env.__FIREFOX__ === 'true';
-
-// const sidePanelConfig = {
-//   side_panel: {
-//     default_path: 'side-panel/index.html',
-//   },
-//   permissions: ['sidePanel'],
-// };
-
 /**
  * After changing, please reload the extension at `chrome://extensions`
  * @type {chrome.runtime.ManifestV3}
@@ -29,18 +20,10 @@ const manifest = deepmerge(
     description: '__MSG_extensionDescription__',
     host_permissions: ['http://meet.google.com/'],
     permissions: ['storage', 'activeTab'],
-    // options_page: 'options/index.html',
-    background: {
-      service_worker: 'background.iife.js',
-      type: 'module',
-    },
     action: {
       default_popup: 'popup/index.html',
       default_icon: 'icon-34.png',
     },
-    // chrome_url_overrides: {
-    //   newtab: 'new-tab/index.html',
-    // },
     icons: {
       128: 'icon-128.png',
     },

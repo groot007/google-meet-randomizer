@@ -1,5 +1,5 @@
+import { generateUniqueId } from '@extension/shared';
 import { type ParticipantsListItem } from '@src/types';
-import { generateUniqueId } from '@src/utils';
 import { useState, type FormEvent } from 'react';
 import { FaChevronUp, FaPlus } from 'react-icons/fa';
 

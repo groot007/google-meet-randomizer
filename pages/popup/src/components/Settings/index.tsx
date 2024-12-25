@@ -1,12 +1,15 @@
 import '@src/Popup.css';
 import { withErrorBoundary, withSuspense } from '@extension/shared';
-import { FaMoon, FaAdjust } from 'react-icons/fa';
+import { FaMoon, FaAdjust, FaChevronCircleDown } from 'react-icons/fa';
 import { useSettingsStore } from '@src/store/settings';
 import { useUIStore } from '@src/store/ui';
 import { getExtensionVersion, isDevMode } from '@src/utils/other';
+import SelectorsSettings from './SelectorsSettings';
+import { useState } from 'react';
 
 const Settings = () => {
   const { isLightTheme, setTheme } = useUIStore();
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState<boolean>(false);
   const isDev = isDevMode();
   const version = getExtensionVersion();
 
@@ -68,6 +71,15 @@ const Settings = () => {
             />
           </div>
         </div>
+
+        <button
+          onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+          className="flex items-center justify-center space-x-2">
+          Advanced Settings
+          <FaChevronCircleDown className="ml-3" />
+        </button>
+
+        {showAdvancedSettings && <SelectorsSettings />}
 
         <footer className="flex justify-end">
           <span>

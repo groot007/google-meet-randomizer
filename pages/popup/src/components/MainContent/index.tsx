@@ -1,10 +1,10 @@
 import '@src/Popup.css';
-import { withErrorBoundary, withSuspense } from '@extension/shared';
+import { generateUniqueId, withErrorBoundary, withSuspense } from '@extension/shared';
 import List from '../List';
 import { useCallback, useEffect, useState } from 'react';
-import { useCurrentUrl } from '../../hooks';
-import { generateListString, generateUniqueId, shuffleArray } from '../../utils';
-import { FaRandom, FaClipboard, FaPaperPlane, FaRegTrashAlt } from 'react-icons/fa';
+import { useCurrentUrl, useInitContentScript } from '../../hooks';
+import { generateListString, shuffleArray } from '../../utils';
+import { FaRandom, FaClipboard, FaPaperPlane, FaRegTrashAlt, FaSearch, FaTimes } from 'react-icons/fa';
 import { RiCheckboxMultipleBlankLine, RiCheckboxMultipleLine } from 'react-icons/ri';
 import { useSettingsStore } from '@src/store/settings';
 import { ControlButton } from '../ControlButton';
@@ -19,6 +19,16 @@ const MainContent = () => {
   const { listPrefix, listPostfix, listItemMarker } = useSettingsStore();
   const isLightTheme = useUIStore(state => state.isLightTheme);
   const [isControlsDisabled, setIsControlsDisabled] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const clearSearch = () => setSearchTerm('');
+
+  const selectRandomParticipant = () => {
+    const visibleParticipants = participants.filter(p => p.isVisible);
+    if (visibleParticipants.length) {
+      const randomParticipant = visibleParticipants[Math.floor(Math.random() * visibleParticipants.length)];
+      setSearchTerm(randomParticipant.name);
+    }
+  };
 
   const currentUrl = useCurrentUrl();
   const isGoogleMeet = currentUrl.includes('meet.google.com');
@@ -36,8 +46,10 @@ const MainContent = () => {
     cleanStorage,
   } = useUrlParticipants(currentUrl);
 
+  useInitContentScript(currentUrl, isGoogleMeet);
+
   useEffect(() => {
-    if (!currentUrl.includes('meet.google.com')) return;
+    if (!isGoogleMeet) return;
 
     const fetchParticipants = async () => {
       chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
@@ -53,7 +65,6 @@ const MainContent = () => {
                 id: generateUniqueId(),
                 isVisible: true,
               }));
-
               setParticipants(participants, true);
             }
           });
@@ -65,7 +76,7 @@ const MainContent = () => {
   }, [currentUrl]);
 
   useEffect(() => {
-    if (!currentUrl.includes('meet.google.com')) return;
+    if (!isGoogleMeet) return;
 
     chrome.runtime.onMessage.addListener(async request => {
       if (request.action === 'updateParticipants') {
@@ -98,9 +109,10 @@ const MainContent = () => {
   );
 
   const shuffleList = useCallback(() => {
-    const pinnedTopParticipants = participants.filter(p => p.pinnedTop);
-    const pinnedBottomParticipants = participants.filter(p => p.pinnedBottom);
-    const unpinnedParticipants = participants.filter(p => !p.pinnedTop && !p.pinnedBottom);
+    const visibleParticipants = participants.filter(p => p.isVisible);
+    const pinnedTopParticipants = visibleParticipants.filter(p => p.pinnedTop);
+    const pinnedBottomParticipants = visibleParticipants.filter(p => p.pinnedBottom);
+    const unpinnedParticipants = visibleParticipants.filter(p => !p.pinnedTop && !p.pinnedBottom);
 
     const shuffledUnpinned = shuffleArray(unpinnedParticipants);
     const shuffledList = [...pinnedTopParticipants, ...shuffledUnpinned, ...pinnedBottomParticipants];
@@ -108,7 +120,7 @@ const MainContent = () => {
   }, [participants, setParticipants]);
 
   const copyToClipboard = () => {
-    const filteredList = participants.filter(p => p.included);
+    const filteredList = participants.filter(p => p.included && p.isVisible);
     const formattedList = generateListString(filteredList, listPrefix, listPostfix, listItemMarker);
     navigator.clipboard.writeText(formattedList).then(() => {
       setShowTooltip(true);
@@ -179,6 +191,33 @@ const MainContent = () => {
       )}
       {participants.length > 0 && (
         <div>
+          <div className="relative my-4 flex-1">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Search participants..."
+              className={`w-full rounded border py-2 pl-10 pr-4 focus:outline-none ${
+                isLightTheme ? 'border-gray-300 bg-white text-black' : 'border-gray-600 bg-gray-700 text-white'
+              }`}
+            />
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-400" size={16} />
+            <div className="absolute right-3 top-1/2 flex -translate-y-1/2 transform items-center space-x-2">
+              {searchTerm && (
+                <button
+                  onClick={clearSearch}
+                  className={`transition-opacity hover:opacity-75 ${isLightTheme ? 'text-gray-600' : 'text-gray-400'}`}>
+                  <FaTimes size={14} />
+                </button>
+              )}
+              <button
+                title="Select random participant"
+                onClick={selectRandomParticipant}
+                className={`transition-opacity hover:opacity-75 ${isLightTheme ? 'text-gray-600' : 'text-gray-400'}`}>
+                <FaRandom size={16} />
+              </button>
+            </div>
+          </div>
           <div className="flex items-center justify-between">
             <div className="mr-2 size-5"></div>
             <div className="mr-2 size-5"></div>
@@ -202,7 +241,7 @@ const MainContent = () => {
           </div>
           <div className={`custom-scrollbar max-h-[300px] ${participants.length > 7 ? 'overflow-y-auto' : ''}`}>
             <List
-              items={participants}
+              items={participants.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))}
               onToggleInclude={toggleInclude}
               onTogglePinTop={togglePinTop}
               onTogglePinBottom={togglePinBottom}
