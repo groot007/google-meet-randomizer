@@ -11,8 +11,6 @@ export class SelectorService {
     try {
       const storedSelectors = useSelectorsStore.getState().selectors;
 
-      console.log('HYDRRRR', useSelectorsStore.getState()._hasHydrated);
-
       if (storedSelectors) {
         this.currentSelectors = {
           ...this.defaultSelectors,

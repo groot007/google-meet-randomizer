@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 
-type ButtonVariant = 'blue' | 'green' | 'purple';
+type ButtonVariant = 'blue' | 'green' | 'purple' | 'regular';
 
 interface ControlButtonProps {
   title: string;
@@ -16,6 +16,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   blue: 'bg-blue-500 hover:bg-blue-600',
   green: 'bg-green-500 hover:bg-green-600',
   purple: 'bg-purple-500 hover:bg-purple-600',
+  regular: '',
 };
 
 export const ControlButton = ({

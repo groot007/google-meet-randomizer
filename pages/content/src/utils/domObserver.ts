@@ -11,7 +11,7 @@ export class DOMObserver {
   static async init() {
     await SelectorService.init();
     this.selectors = SelectorService.getAllSelectors();
-    console.log('SELELCTORSSS', this.selectors);
+
     const targetNode = await waitForElement(this.selectors.PARTICIPANTS_NUMBER);
     await this.setupPanels();
     this.observeChanges(targetNode);

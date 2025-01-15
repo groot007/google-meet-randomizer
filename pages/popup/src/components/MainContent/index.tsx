@@ -1,7 +1,7 @@
 import '@src/Popup.css';
 import { generateUniqueId, withErrorBoundary, withSuspense } from '@extension/shared';
 import List from '../List';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useCurrentUrl, useInitContentScript } from '../../hooks';
 import { generateListString, shuffleArray } from '../../utils';
 import { FaRandom, FaClipboard, FaPaperPlane, FaRegTrashAlt, FaSearch, FaTimes } from 'react-icons/fa';
@@ -12,6 +12,7 @@ import { AddParticipantsForm } from '@src/components/AddParticipantForm';
 import { type ParticipantsListItem } from '@src/types';
 import { useUrlParticipants } from '@src/store/list';
 import { useUIStore } from '@src/store/ui';
+import { SearchInput } from '../SearchInput';
 
 const MainContent = () => {
   const [showTooltip, setShowTooltip] = useState<boolean>(false);
@@ -119,12 +120,15 @@ const MainContent = () => {
     setParticipants(shuffledList);
   }, [participants, setParticipants]);
 
+  const timeout = useRef<NodeJS.Timeout>(null);
   const copyToClipboard = () => {
+    clearTimeout(timeout.current);
     const filteredList = participants.filter(p => p.included && p.isVisible);
     const formattedList = generateListString(filteredList, listPrefix, listPostfix, listItemMarker);
+
     navigator.clipboard.writeText(formattedList).then(() => {
       setShowTooltip(true);
-      setTimeout(() => setShowTooltip(false), 800);
+      timeout.current = setTimeout(() => setShowTooltip(false), 800);
     });
   };
 
@@ -186,38 +190,19 @@ const MainContent = () => {
           tooltipText="Sent!"
         />
       </div>
-      {participants.length === 0 && (
-        <div className="mt-7">No participants found. Open Google meet tab or add items manually</div>
-      )}
+      {participants.length === 0 && <div className="mt-7">Open Google meet tab or add items manually</div>}
       {participants.length > 0 && (
         <div>
-          <div className="relative my-4 flex-1">
-            <input
-              type="text"
+          <div className="my-4">
+            <SearchInput
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              placeholder="Search participants..."
-              className={`w-full rounded border py-2 pl-10 pr-4 focus:outline-none ${
-                isLightTheme ? 'border-gray-300 bg-white text-black' : 'border-gray-600 bg-gray-700 text-white'
-              }`}
+              onChange={setSearchTerm}
+              onClear={clearSearch}
+              onRandomSelect={selectRandomParticipant}
+              isLightTheme={isLightTheme}
             />
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-400" size={16} />
-            <div className="absolute right-3 top-1/2 flex -translate-y-1/2 transform items-center space-x-2">
-              {searchTerm && (
-                <button
-                  onClick={clearSearch}
-                  className={`transition-opacity hover:opacity-75 ${isLightTheme ? 'text-gray-600' : 'text-gray-400'}`}>
-                  <FaTimes size={14} />
-                </button>
-              )}
-              <button
-                title="Select random participant"
-                onClick={selectRandomParticipant}
-                className={`transition-opacity hover:opacity-75 ${isLightTheme ? 'text-gray-600' : 'text-gray-400'}`}>
-                <FaRandom size={16} />
-              </button>
-            </div>
           </div>
+
           <div className="flex items-center justify-between">
             <div className="mr-2 size-5"></div>
             <div className="mr-2 size-5"></div>

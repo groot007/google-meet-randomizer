@@ -1,11 +1,12 @@
 import '@src/Popup.css';
 import { withErrorBoundary, withSuspense } from '@extension/shared';
-import { FaMoon, FaAdjust, FaChevronCircleDown } from 'react-icons/fa';
+import { FaMoon, FaAdjust, FaChevronCircleDown, FaPencilAlt, FaPalette } from 'react-icons/fa';
 import { useSettingsStore } from '@src/store/settings';
 import { useUIStore } from '@src/store/ui';
 import { getExtensionVersion, isDevMode } from '@src/utils/other';
 import SelectorsSettings from './SelectorsSettings';
 import { useState } from 'react';
+import { ControlButton } from '../ControlButton';
 
 const Settings = () => {
   const { isLightTheme, setTheme } = useUIStore();
@@ -15,6 +16,46 @@ const Settings = () => {
 
   const { listPrefix, listPostfix, listItemMarker, setListPrefix, setListPostfix, setListItemMarker } =
     useSettingsStore();
+
+  const { setIsDrawingFeatureActive, isDrawingFeatureActive, setIsPencilActive, isPencilActive } = useSettingsStore();
+
+  const toggleDrawingFeature = () => {
+    setIsDrawingFeatureActive(!isDrawingFeatureActive);
+
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      const currentTab = tabs[0];
+      if (currentTab?.id) {
+        chrome.tabs.sendMessage(
+          currentTab.id,
+          { action: 'toggleDrawingFeature', message: !isDrawingFeatureActive },
+          response => {
+            if (response?.success) {
+              console.log('Message sent successfully');
+            } else {
+              console.log('ERROR sending message', response);
+            }
+          },
+        );
+      }
+    });
+  };
+
+  const triggerPencilEvent = () => {
+    setIsPencilActive(!isPencilActive);
+
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      const currentTab = tabs[0];
+      if (currentTab?.id) {
+        chrome.tabs.sendMessage(currentTab.id, { action: 'togglePencil', turnON: !isPencilActive }, response => {
+          if (response?.success) {
+            console.log('Message sent successfully');
+          } else {
+            console.log('ERROR sending message', response);
+          }
+        });
+      }
+    });
+  };
 
   return (
     <div className="relative flex flex-col items-center justify-center">
@@ -27,6 +68,24 @@ const Settings = () => {
         {isLightTheme ? <FaMoon size={16} /> : <FaAdjust size={16} />}
       </button>
       <div className="mt-4 space-y-4">
+        <h3>Experimental features</h3>
+        <div className="flex flex-row items-start space-x-3">
+          <div className="flex flex-row items-start space-x-3">
+            <ControlButton
+              title="Toggle Drawing Feature"
+              onClick={toggleDrawingFeature}
+              icon={<FaPalette size={18} />}
+              variant={isDrawingFeatureActive ? 'blue' : 'regular'}
+            />
+
+            <ControlButton
+              title="Toggle Pencil"
+              onClick={triggerPencilEvent}
+              icon={<FaPencilAlt size={18} />}
+              variant={isPencilActive ? 'blue' : 'regular'}
+            />
+          </div>
+        </div>
         <div className="flex flex-row items-start space-x-3">
           <div className="flex flex-col items-start space-y-2">
             <label htmlFor="listPrefix" className="text-sm font-medium">

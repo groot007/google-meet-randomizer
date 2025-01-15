@@ -6,9 +6,13 @@ type SettingsState = {
   listPrefix: string;
   listPostfix: string;
   listItemMarker: string;
+  isDrawingFeatureActive: boolean;
+  isPencilActive: boolean;
   setListPrefix: (listPrefix: string) => void;
   setListPostfix: (listPostfix: string) => void;
   setListItemMarker: (listItemMarker: string) => void;
+  setIsDrawingFeatureActive: (isDrawingFeatureActive: boolean) => void;
+  setIsPencilActive: (isPencilActive: boolean) => void;
 };
 
 export const useSettingsStore = create(
@@ -16,7 +20,11 @@ export const useSettingsStore = create(
     set => ({
       listPrefix: '',
       listPostfix: '',
-      listItemMarker: '',
+      listItemMarker: '#.',
+      isDrawingFeatureActive: false,
+      isPencilActive: false,
+      setIsDrawingFeatureActive: isDrawingFeatureActive => set({ isDrawingFeatureActive }),
+      setIsPencilActive: isPencilActive => set({ isPencilActive }),
       setListPrefix: listPrefix => set({ listPrefix }),
       setListPostfix: listPostfix => set({ listPostfix }),
       setListItemMarker: listItemMarker => set({ listItemMarker }),

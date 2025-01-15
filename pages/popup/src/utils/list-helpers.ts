@@ -15,6 +15,7 @@ export const sortByStatus = (list: ParticipantsListItem[]): ParticipantsListItem
 export const generateListString = (participants: ParticipantsListItem[], prefix = '', postfix = '', marker = '') => {
   const list = participants
     .map((p, index) => {
+      if (!marker) return p.name;
       const markerMasked = marker.replaceAll('#', String(index + 1));
       return `${markerMasked || index + 1 + '.'} ${p.name}`;
     })
