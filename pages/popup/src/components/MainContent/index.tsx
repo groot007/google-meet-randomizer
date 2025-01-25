@@ -206,21 +206,18 @@ const MainContent = () => {
           <div className="flex items-center justify-between">
             <div className="mr-2 size-5"></div>
             <div className="mr-2 size-5"></div>
+
+            <h1 className="text-lg font-bold">Participants ({participants.filter(p => p.isVisible).length}): </h1>
             <button
               title="Select all"
               onClick={toggleSelectAll}
               disabled={isControlsDisabled}
-              className={`mr-3 flex size-5 items-center rounded ${isControlsDisabled ? 'cursor-not-allowed opacity-50' : ''}`}>
-              {selectAllChecked ? (
-                <RiCheckboxMultipleLine size={18} className="text-white" />
-              ) : (
-                <RiCheckboxMultipleBlankLine size={18} className="text-white" />
-              )}
+              className={`ml-auto mr-2 flex size-5 items-center rounded hover:text-gray-300 ${isControlsDisabled ? 'cursor-not-allowed opacity-50' : ''}`}>
+              {selectAllChecked ? <RiCheckboxMultipleLine size={18} /> : <RiCheckboxMultipleBlankLine size={18} />}
             </button>
-            <h1 className="text-lg font-bold">Participants ({participants.filter(p => p.isVisible).length}): </h1>
             <button
               onClick={removeAllParticipants}
-              className="ml-auto mr-2 select-none text-red-500 hover:cursor-pointer hover:text-red-700">
+              className="mr-2 select-none text-red-500 hover:cursor-pointer hover:text-red-700">
               <FaRegTrashAlt size={16} />
             </button>
           </div>
