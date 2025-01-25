@@ -76,8 +76,6 @@ export const useParticipantsStore = create(
           // Combine results and remove duplicates
           const allParticipants = getUniqueParticipants([...manuallyAddedParticipants, ...existingParticipants]);
 
-          console.log('allParticipants', allParticipants);
-
           return {
             urlStores: {
               ...state.urlStores,
@@ -216,8 +214,11 @@ export const useParticipantsStore = create(
 
 // Helper hook to access URL-specific store
 export const useUrlParticipants = (url: string) => {
-  const participants = useParticipantsStore(useShallow(state => state.urlStores[url]?.participants || []));
-  const selectAllChecked = useParticipantsStore(useShallow(state => state.urlStores[url]?.selectAllChecked || false));
+  const storeUrl = url || 'default';
+  const participants = useParticipantsStore(useShallow(state => state.urlStores[storeUrl]?.participants || []));
+  const selectAllChecked = useParticipantsStore(
+    useShallow(state => state.urlStores[storeUrl]?.selectAllChecked || false),
+  );
   const setParticipants = useParticipantsStore(useShallow(state => state.setParticipants));
   const deleteParticipant = useParticipantsStore(useShallow(state => state.deleteParticipant));
   const toggleInclude = useParticipantsStore(useShallow(state => state.toggleInclude));
@@ -230,15 +231,15 @@ export const useUrlParticipants = (url: string) => {
   return {
     participants,
     selectAllChecked,
-    cleanStorage: () => cleanStorage(url),
+    cleanStorage: () => cleanStorage(storeUrl),
     setParticipants: (participants: ParticipantsListItem[], observer?: boolean) => {
-      return setParticipants(url, participants, observer);
+      return setParticipants(storeUrl, participants, observer);
     },
-    deleteParticipant: (id: string) => deleteParticipant(url, id),
-    toggleInclude: (id: string) => toggleInclude(url, id),
-    togglePinTop: (id: string) => togglePinTop(url, id),
-    togglePinBottom: (id: string) => togglePinBottom(url, id),
-    toggleSelectAll: () => toggleSelectAll(url),
-    setSelectAllChecked: (checked: boolean) => setSelectAllChecked(url, checked),
+    deleteParticipant: (id: string) => deleteParticipant(storeUrl, id),
+    toggleInclude: (id: string) => toggleInclude(storeUrl, id),
+    togglePinTop: (id: string) => togglePinTop(storeUrl, id),
+    togglePinBottom: (id: string) => togglePinBottom(storeUrl, id),
+    toggleSelectAll: () => toggleSelectAll(storeUrl),
+    setSelectAllChecked: (checked: boolean) => setSelectAllChecked(storeUrl, checked),
   };
 };

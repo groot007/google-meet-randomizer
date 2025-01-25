@@ -34,6 +34,7 @@ const MainContent = () => {
   const currentUrl = useCurrentUrl();
   const isGoogleMeet = currentUrl.includes('meet.google.com');
   const isSendToChatDisabled = isControlsDisabled || !isGoogleMeet;
+
   const {
     participants,
     setParticipants,
@@ -45,7 +46,7 @@ const MainContent = () => {
     togglePinTop,
     togglePinBottom,
     cleanStorage,
-  } = useUrlParticipants(currentUrl);
+  } = useUrlParticipants(isGoogleMeet ? currentUrl : '');
 
   useInitContentScript(currentUrl, isGoogleMeet);
 
