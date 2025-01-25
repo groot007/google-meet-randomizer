@@ -2,7 +2,9 @@ import { DEFAULT_SELECTORS, type Selectors, withErrorBoundary, withSuspense } fr
 import { useSelectorsStore } from '@extension/storage';
 import { useUIStore } from '@src/store/ui';
 import { useState } from 'react';
-import { FaEye } from 'react-icons/fa';
+import { FaEye, FaPalette, FaPencilAlt } from 'react-icons/fa';
+import { ControlButton } from '../ControlButton';
+import { useSettingsStore } from '@src/store/settings';
 
 interface StorageData {
   key: string;
@@ -41,6 +43,46 @@ const SelectorsSettings = () => {
 
   const { selectors, updateSelector, resetSelectors } = useSelectorsStore();
 
+  const { setIsDrawingFeatureActive, isDrawingFeatureActive, setIsPencilActive, isPencilActive } = useSettingsStore();
+
+  const toggleDrawingFeature = () => {
+    setIsDrawingFeatureActive(!isDrawingFeatureActive);
+
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      const currentTab = tabs[0];
+      if (currentTab?.id) {
+        chrome.tabs.sendMessage(
+          currentTab.id,
+          { action: 'toggleDrawingFeature', message: isDrawingFeatureActive },
+          response => {
+            if (response?.success) {
+              console.log('Message sent successfully');
+            } else {
+              console.log('ERROR sending message', response);
+            }
+          },
+        );
+      }
+    });
+  };
+
+  const triggerPencilEvent = () => {
+    setIsPencilActive(!isPencilActive);
+
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      const currentTab = tabs[0];
+      if (currentTab?.id) {
+        chrome.tabs.sendMessage(currentTab.id, { action: 'togglePencil', turnON: !isPencilActive }, response => {
+          if (response?.success) {
+            console.log('Message sent successfully');
+          } else {
+            console.log('ERROR sending message', response);
+          }
+        });
+      }
+    });
+  };
+
   const cleanStorage = () => {
     chrome.storage.local.clear();
   };
@@ -54,7 +96,26 @@ const SelectorsSettings = () => {
 
   return (
     <div className="border-t pt-4">
-      <h2 className="mb-4 text-lg font-bold">Selectors Settings</h2>
+      <h2 className="mb-4 text-lg font-bold">Drawing (Experimental feature) </h2>
+      <div className="flex flex-row items-start space-x-3">
+        <div className="flex flex-row items-start space-x-3">
+          <ControlButton
+            title="Toggle Drawing Feature"
+            onClick={toggleDrawingFeature}
+            icon={<FaPalette size={18} />}
+            variant={isDrawingFeatureActive ? 'blue' : 'regular'}
+          />
+
+          <ControlButton
+            title="Toggle Pencil"
+            onClick={triggerPencilEvent}
+            icon={<FaPencilAlt size={18} />}
+            variant={isPencilActive ? 'blue' : 'regular'}
+          />
+        </div>
+      </div>
+
+      <h2 className="my-4 text-lg font-bold">Selectors Settings</h2>
 
       <div className="grid gap-4">
         {/* Add remaining selector inputs */}
