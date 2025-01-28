@@ -28,3 +28,19 @@ export const generateListString = (participants: ParticipantsListItem[], prefix 
 export const getUniqueParticipants = (participants: ParticipantsListItem[]): ParticipantsListItem[] => {
   return participants.filter((participant, index, self) => index === self.findIndex(p => p.name === participant.name));
 };
+
+export const groupByLabel = <T extends Record<string, any>>(array: T[]) => {
+  const grouped = array.reduce(
+    (acc, item) => {
+      const key = item.group.label;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(item);
+      return acc;
+    },
+    {} as Record<string, T[]>,
+  );
+
+  return grouped;
+};

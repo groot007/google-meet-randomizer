@@ -1,7 +1,7 @@
 import { generateUniqueId } from '@extension/shared';
 import { type ParticipantsListItem } from '@src/types';
 import { useState, type FormEvent } from 'react';
-import { FaChevronUp, FaPlus } from 'react-icons/fa';
+import { FaChevronUp, FaPlus, FaUserAlt } from 'react-icons/fa';
 
 interface AddParticipantsFormProps {
   isLightTheme: boolean;
@@ -24,6 +24,10 @@ export const AddParticipantsForm = ({ isLightTheme, onSubmit }: AddParticipantsF
         pinnedTop: false,
         pinnedBottom: false,
         isAddedManually: true,
+        group: {
+          label: 'User',
+          color: '#000',
+        },
         id: generateUniqueId(),
         isVisible: true,
       }));

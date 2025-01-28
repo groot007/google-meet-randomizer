@@ -16,7 +16,7 @@ export const STORAGE_KEY = 'MEET_SELECTORS';
 export const DEFAULT_SELECTORS: Selectors = {
   PARTICIPANT_ITEM: '[data-participant-id]',
   CHAT_INPUT: '#bfTqV',
-  CHAT_SEND_BUTTON: '.yHy1rc',
+  CHAT_SEND_BUTTON: 'button',
   CHAT_SEND_BUTTON_PARENT: '.SjMC3',
   TEXT_CONTENT: '[jscontroller="LxQ0Q"]',
   PARTICIPANTS_NUMBER: '.uGOf1d',

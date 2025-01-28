@@ -5,6 +5,7 @@ import { useSettingsStore } from '@src/store/settings';
 import { useUIStore } from '@src/store/ui';
 import { getExtensionVersion, isDevMode } from '@src/utils/other';
 import SelectorsSettings from './SelectorsSettings';
+import GroupSettings from './GroupSettings';
 import { useState } from 'react';
 
 const Settings = () => {
@@ -27,6 +28,9 @@ const Settings = () => {
         {isLightTheme ? <FaMoon size={16} /> : <FaAdjust size={16} />}
       </button>
       <div className="mt-4 space-y-4">
+        <div className="flex flex-row items-start space-x-3">
+          <GroupSettings />
+        </div>
         <div className="flex flex-row items-start space-x-3">
           <div className="flex flex-col items-start space-y-2">
             <label htmlFor="listPrefix" className="text-sm font-medium">

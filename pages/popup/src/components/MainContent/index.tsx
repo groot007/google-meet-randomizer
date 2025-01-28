@@ -1,18 +1,36 @@
 import '@src/Popup.css';
 import { generateUniqueId, withErrorBoundary, withSuspense } from '@extension/shared';
-import List from '../List';
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useCurrentUrl, useInitContentScript } from '../../hooks';
-import { generateListString, shuffleArray } from '../../utils';
-import { FaRandom, FaClipboard, FaPaperPlane, FaRegTrashAlt, FaSearch, FaTimes } from 'react-icons/fa';
+import { generateListString, getUniqueParticipants, groupByLabel, shuffleArray } from '../../utils';
+import { FaRandom, FaClipboard, FaPaperPlane, FaRegTrashAlt, FaUserAlt } from 'react-icons/fa';
 import { RiCheckboxMultipleBlankLine, RiCheckboxMultipleLine } from 'react-icons/ri';
 import { useSettingsStore } from '@src/store/settings';
 import { ControlButton } from '../ControlButton';
 import { AddParticipantsForm } from '@src/components/AddParticipantForm';
-import { type ParticipantsListItem } from '@src/types';
+import { type Group, type ParticipantsListItem } from '@src/types';
 import { useUrlParticipants } from '@src/store/list';
 import { useUIStore } from '@src/store/ui';
 import { SearchInput } from '../SearchInput';
+import ListSection from './ListSection';
+
+const mapParticipantWithStore = (participant: any, existingParticipants: ParticipantsListItem[]) => {
+  const existing = existingParticipants.find(p => p.name === participant.name);
+
+  return {
+    name: participant.name,
+    included: existing?.included ?? true,
+    pinnedTop: existing?.pinnedTop ?? false,
+    pinnedBottom: existing?.pinnedBottom ?? false,
+    id: existing?.id ?? generateUniqueId(),
+    isVisible: true,
+    group: existing?.group ?? {
+      label: 'User',
+      color: '#000',
+    },
+  };
+};
 
 const MainContent = () => {
   const [showTooltip, setShowTooltip] = useState<boolean>(false);
@@ -35,18 +53,14 @@ const MainContent = () => {
   const isGoogleMeet = currentUrl.includes('meet.google.com');
   const isSendToChatDisabled = isControlsDisabled || !isGoogleMeet;
 
-  const {
-    participants,
-    setParticipants,
-    deleteParticipant,
-    toggleInclude,
-    selectAllChecked,
-    setSelectAllChecked,
-    toggleSelectAll,
-    togglePinTop,
-    togglePinBottom,
-    cleanStorage,
-  } = useUrlParticipants(isGoogleMeet ? currentUrl : '');
+  const { participants, setParticipants, isSelectAllChecked, setSelectAllStatus, cleanStorage } = useUrlParticipants(
+    isGoogleMeet ? currentUrl : '',
+  );
+
+  const toggleSelectAll = useCallback(() => {
+    setParticipants(participants.map(p => ({ ...p, included: !isSelectAllChecked })));
+    setSelectAllStatus(!isSelectAllChecked);
+  }, [participants, isSelectAllChecked, setParticipants, setSelectAllStatus]);
 
   useInitContentScript(currentUrl, isGoogleMeet);
 
@@ -58,16 +72,10 @@ const MainContent = () => {
         const currentTab = tabs[0];
         if (currentTab?.id) {
           chrome.tabs.sendMessage(currentTab.id, { action: 'getParticipants' }, response => {
-            if (response && response.participants) {
-              const participants = response.participants.map((p: ParticipantsListItem) => ({
-                name: p.name,
-                included: true,
-                pinnedTop: false,
-                pinnedBottom: false,
-                id: generateUniqueId(),
-                isVisible: true,
-              }));
-              setParticipants(participants, true);
+            if (response?.participants) {
+              const mappedParticipants = response.participants.map(p => mapParticipantWithStore(p, participants));
+              const uniqueParticipants = getUniqueParticipants(mappedParticipants);
+              setParticipants(uniqueParticipants, true);
             }
           });
         }
@@ -82,17 +90,11 @@ const MainContent = () => {
 
     chrome.runtime.onMessage.addListener(async request => {
       if (request.action === 'updateParticipants') {
-        const updatedList = request.participants.map((p: ParticipantsListItem) => ({
-          name: p.name,
-          included: true,
-          pinnedTop: false,
-          pinnedBottom: false,
-          id: generateUniqueId(),
-          isVisible: true,
-        }));
+        const mappedParticipants = request.participants.map(p => mapParticipantWithStore(p, participants));
 
-        if (updatedList.length) {
-          setParticipants(updatedList, true);
+        if (mappedParticipants.length) {
+          const uniqueParticipants = getUniqueParticipants(mappedParticipants);
+          setParticipants(uniqueParticipants, true);
         }
       }
     });
@@ -100,25 +102,29 @@ const MainContent = () => {
 
   useEffect(() => {
     const allSelected = participants.every(p => p.included);
-    setSelectAllChecked(allSelected);
-  }, [participants, setSelectAllChecked]);
+    setSelectAllStatus(allSelected);
+  }, [participants, setSelectAllStatus]);
 
   const handleAddParticipants = useCallback(
-    (participants: ParticipantsListItem[]) => {
-      setParticipants(participants);
+    (newParticipants: ParticipantsListItem[]) => {
+      setParticipants([...participants, ...newParticipants]);
     },
-    [setParticipants],
+    [participants],
   );
 
   const shuffleList = useCallback(() => {
     const visibleParticipants = participants.filter(p => p.isVisible);
-    const pinnedTopParticipants = visibleParticipants.filter(p => p.pinnedTop);
-    const pinnedBottomParticipants = visibleParticipants.filter(p => p.pinnedBottom);
+    // const pinnedTopParticipants = visibleParticipants.filter(p => p.pinnedTop);
+    // const pinnedBottomParticipants = visibleParticipants.filter(p => p.pinnedBottom);
     const unpinnedParticipants = visibleParticipants.filter(p => !p.pinnedTop && !p.pinnedBottom);
+    const grouped = groupByLabel(unpinnedParticipants);
+    const shaffleByGroup = Object.values(grouped)
+      .map(group => shuffleArray(group))
+      .flat();
 
-    const shuffledUnpinned = shuffleArray(unpinnedParticipants);
-    const shuffledList = [...pinnedTopParticipants, ...shuffledUnpinned, ...pinnedBottomParticipants];
-    setParticipants(shuffledList);
+    // const shuffledUnpinned = shuffleArray(unpinnedParticipants);
+    // const shuffledList = [...pinnedTopParticipants, ...shuffledUnpinned, ...pinnedBottomParticipants];
+    setParticipants(shaffleByGroup);
   }, [participants, setParticipants]);
 
   const timeout = useRef<NodeJS.Timeout>(null);
@@ -214,7 +220,7 @@ const MainContent = () => {
               onClick={toggleSelectAll}
               disabled={isControlsDisabled}
               className={`ml-auto mr-2 flex size-5 items-center rounded hover:text-gray-300 ${isControlsDisabled ? 'cursor-not-allowed opacity-50' : ''}`}>
-              {selectAllChecked ? <RiCheckboxMultipleLine size={18} /> : <RiCheckboxMultipleBlankLine size={18} />}
+              {isSelectAllChecked ? <RiCheckboxMultipleLine size={18} /> : <RiCheckboxMultipleBlankLine size={18} />}
             </button>
             <button
               onClick={removeAllParticipants}
@@ -222,15 +228,7 @@ const MainContent = () => {
               <FaRegTrashAlt size={16} />
             </button>
           </div>
-          <div className={`custom-scrollbar max-h-[300px] ${participants.length > 7 ? 'overflow-y-auto' : ''}`}>
-            <List
-              items={participants.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))}
-              onToggleInclude={toggleInclude}
-              onTogglePinTop={togglePinTop}
-              onTogglePinBottom={togglePinBottom}
-              onDelete={deleteParticipant}
-            />
-          </div>
+          <ListSection searchTerm={searchTerm} />
         </div>
       )}
       <AddParticipantsForm isLightTheme={isLightTheme} onSubmit={handleAddParticipants} />
