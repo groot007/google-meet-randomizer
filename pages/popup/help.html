@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Google Meet Participants Manager - Help</title>
+    <link rel="stylesheet" href="./src/help.css" />
+    <style>
+      body {
+        background-color: #1a1a1a;
+        color: #e5e5e5;
+        font-size: 14px;
+        padding: 1.5rem;
+      }
+
+      .container {
+        max-width: 42rem;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+      }
+
+      h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+      }
+
+      section {
+        margin-bottom: 2rem;
+      }
+
+      p {
+        margin-bottom: 1rem;
+        line-height: 1.6;
+      }
+
+      ul {
+        list-style-type: disc;
+        padding-left: 1.25rem;
+      }
+
+      li {
+        margin-bottom: 0.5rem;
+      }
+
+      .feature-box {
+        background-color: #2d2d2d;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Google Meet Participants Manager</h1>
+
+      <section>
+        <h2>Overview</h2>
+        <p
+          >This extension helps you manage Google Meet participants with advanced features like grouping, sorting, and
+          quick actions.</p
+        >
+        <p>
+          Items in the popup will be added automatically when you open the Google Meet tab. It means it when someone
+          join or leave the list will be updated. You can also add items manually by pressing plus button and fill the
+          form.
+        </p>
+      </section>
+      <div>
+        <h2>Desctiption of elements</h2>
+        <ol>
+          <li>Shuffle the list - it will be shuffled withing group if more than one group defined</li>
+          <li>Copy the list to buffer</li>
+          <li>Send the list to the Google meet chat (active only when google meet tab is opened)</li>
+          <li>Search input and shuffle button that gives random item from the list</li>
+          <li
+            >Select/Deselect all items. Selecting means will it be included in the list for copying or sending to the
+            chat</li
+          >
+          <li>Removing all items</li>
+          <li>Select group icon</li>
+          <li
+            >Group list - each item is draggable and can be moved in any order - items in the list will be in the same
+            order</li
+          >
+          <li>Select/Deselect each item</li>
+          <li>Removing item icon</li>
+          <li
+            >Button to open form for adding new items - form can be filled multiline each line will be a separate
+            item</li
+          >
+          <li>Settings page - where you can edit groups or list texts</li>
+          <li>Help page (current page)</li>
+        </ol>
+        <img width="300px" src="./public/info.png" alt="Help" />
+      </div>
+      <div>
+        <h2>Gouping and randomizing by groups demo:</h2>
+        <img src="./public/help.gif" alt="Help" />
+      </div>
+    </div>
+  </body>
+</html>

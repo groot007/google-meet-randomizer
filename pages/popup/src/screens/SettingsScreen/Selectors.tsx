@@ -3,7 +3,7 @@ import { useSelectorsStore } from '@extension/storage';
 import { useUIStore } from '@src/store/ui';
 import { useState } from 'react';
 import { FaEye, FaPalette, FaPencilAlt } from 'react-icons/fa';
-import { ControlButton } from '../ControlButton';
+import { ControlButton } from '@src/components/ControlButton';
 import { useSettingsStore } from '@src/store/settings';
 
 interface StorageData {

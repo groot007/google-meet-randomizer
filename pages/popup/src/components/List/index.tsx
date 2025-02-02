@@ -1,9 +1,9 @@
 import { type Group, type ParticipantsListItem } from '@src/types';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
-import { FaTimes, FaUserAlt, FaCrown, FaStar, FaHeart, FaSmile, FaUserTag } from 'react-icons/fa';
+import { FaTimes } from 'react-icons/fa';
 import { MdDoDisturbAlt } from 'react-icons/md';
 import { useState } from 'react';
-import GroupSelector from '../GroupSelector';
+import { GroupSelectorPopup } from '../Group';
 import { useGroupsStore } from '@src/store/groups';
 
 type ListProps = {
@@ -30,7 +30,7 @@ const List = ({ items, onToggleInclude, onDelete, onChangeGroup }: ListProps) =>
           data-id={item.id}
           className={`flex items-center justify-between border-b border-gray-600 p-2 pl-0`}>
           <div className="flex items-center">
-            <GroupSelector
+            <GroupSelectorPopup
               currentGroup={item.group || defaultGroup}
               onSelect={group => onChangeGroup?.(item.id, group)}
               isOpen={openIconSelector === item.id}

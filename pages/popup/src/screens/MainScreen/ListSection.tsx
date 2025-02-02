@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import List from '../List';
-import GroupsList from '../GroupsList';
+import List from '@src/components/List';
+import { GroupsList } from '@src/components/Group';
 import { useUrlParticipants } from '@src/store/list';
 import { useCurrentUrl } from '../../hooks';
 import { useUIStore } from '@src/store/ui';
@@ -37,7 +37,7 @@ const ListSection = ({ searchTerm }: ListSectionProps) => {
   const changeGroup = (id: string, group: Group) => {
     const withNewGroup = participants.map(p => (p.id === id ? { ...p, group } : p));
     const groupedByLabel = groupByLabel(withNewGroup);
-    const newList = [];
+    const newList = [] as typeof participants;
     Object.keys(groupedByLabel).forEach(key => {
       newList.push(...groupedByLabel[key]);
     });
@@ -45,17 +45,16 @@ const ListSection = ({ searchTerm }: ListSectionProps) => {
   };
 
   useEffect(() => {
-    const groupedByLabel = groupByLabel(participants);
+    const visibleParticipants = participants.filter(p => p.isVisible);
+    const groupedByLabel = groupByLabel(visibleParticipants);
 
     const existingGroups = groups.filter(group => Object.keys(groupedByLabel).includes(group.label));
 
     const newGroups = Object.values(groupedByLabel)
       .map(group => group[0].group)
-      .filter(group => !existingGroups.find(g => g.label === group.label));
+      .filter(group => !groups.find(g => g.label === group.label));
 
-    const finalGroups = [...existingGroups, ...newGroups];
-
-    setGroupsOrder(finalGroups);
+    setGroupsOrder([...existingGroups, ...newGroups]);
   }, [groups, participants, setGroupsOrder]);
 
   useEffect(() => {

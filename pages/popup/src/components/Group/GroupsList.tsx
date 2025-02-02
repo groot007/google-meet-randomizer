@@ -1,6 +1,5 @@
 import type { Group } from '@src/types';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { FaUserAlt } from 'react-icons/fa';
 import GroupIcon from '../Group/GroupIcon';
 
 type GroupsListProps = {

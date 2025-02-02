@@ -1,6 +1,8 @@
 export type Group = {
   label: string;
   color: string;
+  type: 'text' | 'emoji';
+  id: string;
 };
 
 export type ParticipantsListItem = {

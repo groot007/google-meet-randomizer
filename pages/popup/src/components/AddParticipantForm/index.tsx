@@ -1,7 +1,7 @@
 import { generateUniqueId } from '@extension/shared';
 import { type ParticipantsListItem } from '@src/types';
 import { useState, type FormEvent } from 'react';
-import { FaChevronUp, FaPlus, FaUserAlt } from 'react-icons/fa';
+import { FaChevronUp, FaPlus } from 'react-icons/fa';
 
 interface AddParticipantsFormProps {
   isLightTheme: boolean;
@@ -36,7 +36,7 @@ export const AddParticipantsForm = ({ isLightTheme, onSubmit }: AddParticipantsF
       return;
     }
 
-    onSubmit(newList);
+    onSubmit(newList as ParticipantsListItem[]);
     setNewParticipants('');
   };
 

@@ -3,7 +3,7 @@ import { useState, useRef } from 'react';
 import EmojiPicker from 'emoji-picker-react';
 
 import { useGroupsStore } from '../../store/groups';
-import GroupIcon from '../Group/GroupIcon';
+import GroupIcon from '@src/components/Group/GroupIcon';
 import { useUIStore } from '@src/store/ui';
 import { FaRegSmile, FaTimes } from 'react-icons/fa';
 import { MdColorize } from 'react-icons/md';
@@ -77,7 +77,7 @@ const GroupSettings = () => {
       </div>
 
       <button
-        onClick={() => addGroup({ label: 'New Group', color: generateColor() })}
+        onClick={() => addGroup({ label: 'New Group', color: generateColor(), type: 'text' })}
         className="mt-4 flex items-center space-x-2 rounded bg-blue-500 px-3 py-2 text-white hover:bg-blue-600">
         Add Group
       </button>

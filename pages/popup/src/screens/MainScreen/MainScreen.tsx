@@ -4,32 +4,54 @@ import { generateUniqueId, withErrorBoundary, withSuspense } from '@extension/sh
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useCurrentUrl, useInitContentScript } from '../../hooks';
 import { generateListString, getUniqueParticipants, groupByLabel, shuffleArray } from '../../utils';
-import { FaRandom, FaClipboard, FaPaperPlane, FaRegTrashAlt, FaUserAlt } from 'react-icons/fa';
+import { FaRandom, FaClipboard, FaPaperPlane, FaRegTrashAlt } from 'react-icons/fa';
 import { RiCheckboxMultipleBlankLine, RiCheckboxMultipleLine } from 'react-icons/ri';
 import { useSettingsStore } from '@src/store/settings';
-import { ControlButton } from '../ControlButton';
+import { ControlButton } from '../../components/ControlButton';
 import { AddParticipantsForm } from '@src/components/AddParticipantForm';
-import { type Group, type ParticipantsListItem } from '@src/types';
+import { type ParticipantsListItem } from '@src/types';
 import { useUrlParticipants } from '@src/store/list';
 import { useUIStore } from '@src/store/ui';
-import { SearchInput } from '../SearchInput';
+import { SearchInput } from '../../components/SearchInput';
 import ListSection from './ListSection';
 
-const mapParticipantWithStore = (participant: any, existingParticipants: ParticipantsListItem[]) => {
-  const existing = existingParticipants.find(p => p.name === participant.name);
+type TimeoutId = ReturnType<typeof setTimeout>;
 
-  return {
-    name: participant.name,
-    included: existing?.included ?? true,
-    pinnedTop: existing?.pinnedTop ?? false,
-    pinnedBottom: existing?.pinnedBottom ?? false,
-    id: existing?.id ?? generateUniqueId(),
-    isVisible: true,
-    group: existing?.group ?? {
-      label: 'User',
-      color: '#000',
-    },
-  };
+const mergeParticipants = (newParticipants: any[], storedParticipants: ParticipantsListItem[]) => {
+  // Keep track of processed participants
+  const processedNames = new Set();
+
+  // Map new participants with stored data if exists
+  const mergedParticipants = newParticipants.map(newP => {
+    processedNames.add(newP.name);
+    const stored = storedParticipants.find(p => p.name === newP.name);
+
+    return {
+      ...newP,
+      included: stored?.included ?? true,
+      pinnedTop: stored?.pinnedTop ?? false,
+      pinnedBottom: stored?.pinnedBottom ?? false,
+      id: stored?.id ?? generateUniqueId(),
+      isVisible: true,
+      group: stored?.group ?? {
+        label: 'User',
+        color: '#000',
+      },
+    };
+  });
+
+  const addedManually = storedParticipants.filter(p => p.isAddedManually);
+
+  // Add stored participants that are not in new list as invisible
+  const remainingStored = storedParticipants
+    .filter(p => !processedNames.has(p.name))
+    .filter(p => !p.isAddedManually)
+    .map(p => ({
+      ...p,
+      isVisible: false,
+    }));
+
+  return [...mergedParticipants, ...addedManually, ...remainingStored];
 };
 
 const MainContent = () => {
@@ -73,8 +95,8 @@ const MainContent = () => {
         if (currentTab?.id) {
           chrome.tabs.sendMessage(currentTab.id, { action: 'getParticipants' }, response => {
             if (response?.participants) {
-              const mappedParticipants = response.participants.map(p => mapParticipantWithStore(p, participants));
-              const uniqueParticipants = getUniqueParticipants(mappedParticipants);
+              const mergedList = mergeParticipants(response.participants, participants);
+              const uniqueParticipants = getUniqueParticipants(mergedList);
               setParticipants(uniqueParticipants, true);
             }
           });
@@ -90,15 +112,15 @@ const MainContent = () => {
 
     chrome.runtime.onMessage.addListener(async request => {
       if (request.action === 'updateParticipants') {
-        const mappedParticipants = request.participants.map(p => mapParticipantWithStore(p, participants));
+        const mergedList = mergeParticipants(request.participants, participants);
 
-        if (mappedParticipants.length) {
-          const uniqueParticipants = getUniqueParticipants(mappedParticipants);
+        if (mergedList.length) {
+          const uniqueParticipants = getUniqueParticipants(mergedList);
           setParticipants(uniqueParticipants, true);
         }
       }
     });
-  }, [setParticipants, currentUrl]);
+  }, [setParticipants, currentUrl, participants, isGoogleMeet]);
 
   useEffect(() => {
     const allSelected = participants.every(p => p.included);
@@ -114,22 +136,21 @@ const MainContent = () => {
 
   const shuffleList = useCallback(() => {
     const visibleParticipants = participants.filter(p => p.isVisible);
-    // const pinnedTopParticipants = visibleParticipants.filter(p => p.pinnedTop);
-    // const pinnedBottomParticipants = visibleParticipants.filter(p => p.pinnedBottom);
     const unpinnedParticipants = visibleParticipants.filter(p => !p.pinnedTop && !p.pinnedBottom);
     const grouped = groupByLabel(unpinnedParticipants);
     const shaffleByGroup = Object.values(grouped)
       .map(group => shuffleArray(group))
       .flat();
 
-    // const shuffledUnpinned = shuffleArray(unpinnedParticipants);
-    // const shuffledList = [...pinnedTopParticipants, ...shuffledUnpinned, ...pinnedBottomParticipants];
     setParticipants(shaffleByGroup);
   }, [participants, setParticipants]);
 
-  const timeout = useRef<NodeJS.Timeout>(null);
+  const timeout = useRef<TimeoutId | null>(null);
   const copyToClipboard = () => {
-    clearTimeout(timeout.current);
+    if (timeout.current !== null) {
+      clearTimeout(timeout.current);
+    }
+
     const filteredList = participants.filter(p => p.included && p.isVisible);
     const formattedList = generateListString(filteredList, listPrefix, listPostfix, listItemMarker);
 

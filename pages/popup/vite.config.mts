@@ -13,5 +13,11 @@ export default withPageConfig({
   publicDir: resolve(rootDir, 'public'),
   build: {
     outDir: resolve(rootDir, '..', '..', 'dist', 'popup'),
+    rollupOptions: {
+      input: {
+        index: resolve(rootDir, 'index.html'),
+        help: resolve(rootDir, 'help.html'),
+      },
+    },
   },
 });

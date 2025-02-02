@@ -1,5 +1,5 @@
 import { type Group } from '@src/types';
-import GroupIcon from '../Group/GroupIcon';
+import GroupIcon from './GroupIcon';
 
 type GroupSelectorProps = {
   currentGroup: Group;
@@ -9,7 +9,8 @@ type GroupSelectorProps = {
   availableGroups: Group[];
 };
 
-const defaultGroup = {
+const defaultGroup: Group = {
+  id: 'default_id',
   label: 'User',
   color: '#000',
   type: 'text',

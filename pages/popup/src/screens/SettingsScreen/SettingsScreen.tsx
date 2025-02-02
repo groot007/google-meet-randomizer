@@ -4,8 +4,8 @@ import { FaMoon, FaAdjust, FaChevronCircleDown } from 'react-icons/fa';
 import { useSettingsStore } from '@src/store/settings';
 import { useUIStore } from '@src/store/ui';
 import { getExtensionVersion, isDevMode } from '@src/utils/other';
-import SelectorsSettings from './SelectorsSettings';
-import GroupSettings from './GroupSettings';
+import SelectorsSettings from './Selectors';
+import GroupSettings from './Groups';
 import { useState } from 'react';
 
 const Settings = () => {
