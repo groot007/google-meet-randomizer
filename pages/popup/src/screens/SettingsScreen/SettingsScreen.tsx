@@ -7,6 +7,7 @@ import { getExtensionVersion, isDevMode } from '@src/utils/other';
 import SelectorsSettings from './Selectors';
 import GroupSettings from './Groups';
 import { useState } from 'react';
+import { ErrorCleanStorage } from '@src/components/ErrorBounding';
 
 const Settings = () => {
   const { isLightTheme, setTheme } = useUIStore();
@@ -95,4 +96,4 @@ const Settings = () => {
   );
 };
 
-export default withErrorBoundary(withSuspense(Settings, <div>Loading...</div>), <div>Error Occurred</div>);
+export default withErrorBoundary(withSuspense(Settings, <div>Loading...</div>), <ErrorCleanStorage />);

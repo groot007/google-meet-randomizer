@@ -14,6 +14,7 @@ import { useUrlParticipants } from '@src/store/list';
 import { useUIStore } from '@src/store/ui';
 import { SearchInput } from '../../components/SearchInput';
 import ListSection from './ListSection';
+import { ErrorCleanStorage } from '@src/components/ErrorBounding';
 
 type TimeoutId = ReturnType<typeof setTimeout>;
 
@@ -167,6 +168,7 @@ const MainContent = () => {
       const currentTab = tabs[0];
       if (currentTab?.id) {
         chrome.tabs.sendMessage(currentTab.id, { action: 'sendToChat', message: formattedList }, response => {
+          console.log('response', currentTab?.id);
           if (response?.success) {
             setShowSendingTooltip(true);
             console.log('Message sent successfully');
@@ -257,4 +259,4 @@ const MainContent = () => {
   );
 };
 
-export default withErrorBoundary(withSuspense(MainContent, <div>Loading...</div>), <div>Error Occurred</div>);
+export default withErrorBoundary(withSuspense(MainContent, <div>Loading...</div>), <ErrorCleanStorage />);

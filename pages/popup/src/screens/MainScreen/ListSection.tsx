@@ -71,6 +71,7 @@ const ListSection = ({ searchTerm }: ListSectionProps) => {
 
     setParticipants(finalList);
   }, [groups, participants, setParticipants]);
+
   return (
     <div className="flex">
       {groups.length > 1 && (
