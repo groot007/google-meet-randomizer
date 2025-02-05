@@ -7,7 +7,8 @@ export const useCurrentUrl = (): string => {
     chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
       const currentTab = tabs[0];
       if (currentTab?.url) {
-        setCurrentUrl(currentTab.url);
+        const urlWithoutParams = currentTab.url.split('?')[0];
+        setCurrentUrl(urlWithoutParams);
       }
     });
   }, []);

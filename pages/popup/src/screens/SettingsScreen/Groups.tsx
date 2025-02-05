@@ -74,6 +74,17 @@ const GroupSettings = () => {
             </div>
           </div>
         ))}
+
+        {showPicker && (
+          <div ref={pickerRef} className="absolute top-0 z-50">
+            <EmojiPicker
+              reactionsDefaultOpen={true}
+              onReactionClick={handleEmojiSelect}
+              onEmojiClick={handleEmojiSelect}
+              width={300}
+            />
+          </div>
+        )}
       </div>
 
       <button
@@ -81,17 +92,6 @@ const GroupSettings = () => {
         className="mt-4 flex items-center space-x-2 rounded bg-blue-500 px-3 py-2 text-white hover:bg-blue-600">
         Add Group
       </button>
-
-      {showPicker && (
-        <div ref={pickerRef} className="absolute top-0 z-50">
-          <EmojiPicker
-            reactionsDefaultOpen={true}
-            onReactionClick={handleEmojiSelect}
-            onEmojiClick={handleEmojiSelect}
-            width={300}
-          />
-        </div>
-      )}
     </div>
   );
 };

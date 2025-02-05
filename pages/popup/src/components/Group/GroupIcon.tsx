@@ -21,11 +21,11 @@ const GroupIcon = ({ group }: GroupIconProps) => {
 
   const splitLabel = group.label.split(' ');
   const cropLabel =
-    group.label.split(' ').length > 1 ? splitLabel[0].charAt(0) + splitLabel[1].charAt(0) : group.label.substring(0, 2);
+    group.label.split(' ').length > 1 ? splitLabel[0].charAt(0) + splitLabel[1].charAt(0) : group.label.substring(0, 3);
 
   return (
     <div
-      className="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium"
+      className="inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-medium"
       style={{
         backgroundColor: group.color,
         color: '#fff',
