@@ -1,9 +1,9 @@
 import '@src/Popup.css';
-import { generateUniqueId, withErrorBoundary, withSuspense } from '@extension/shared';
+import { withErrorBoundary, withSuspense } from '@extension/shared';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useCurrentUrl, useInitContentScript } from '../../hooks';
-import { generateListString, getUniqueParticipants, groupByLabel, mergeParticipants, shuffleArray } from '../../utils';
+import { generateListString, groupByLabel, mergeParticipants, shuffleArray } from '../../utils';
 import { FaRandom, FaClipboard, FaPaperPlane, FaRegTrashAlt } from 'react-icons/fa';
 import { RiCheckboxMultipleBlankLine, RiCheckboxMultipleLine } from 'react-icons/ri';
 import { useSettingsStore } from '@src/store/settings';
@@ -40,9 +40,8 @@ const MainContent = () => {
   const isGoogleMeet = currentUrl.includes('meet.google.com');
   const isSendToChatDisabled = isControlsDisabled || !isGoogleMeet;
 
-  const { participants, setParticipants, isSelectAllChecked, setSelectAllStatus, cleanStorage } = useUrlParticipants(
-    isGoogleMeet ? currentUrl : '',
-  );
+  const { participants, setParticipants, isSelectAllChecked, setSelectAllStatus, cleanStorage, groups } =
+    useUrlParticipants(isGoogleMeet ? currentUrl : '');
 
   const toggleSelectAll = useCallback(() => {
     setParticipants(participants.map(p => ({ ...p, included: !isSelectAllChecked })));
@@ -108,7 +107,7 @@ const MainContent = () => {
       } as ParticipantsListItem['group'],
     }));
     setParticipants(participatnsWithoutGroups);
-  }, []);
+  }, [participants, setParticipants]);
 
   const shuffleList = useCallback(() => {
     const visibleParticipants = participants.filter(p => p.isVisible);
@@ -209,12 +208,16 @@ const MainContent = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            <button
-              title="Remove grouping"
-              onClick={handleCleanGroups}
-              className={`ml-2 mr-auto flex size-5 items-center rounded text-red-500 hover:text-red-700`}>
-              <MdGroupRemove size={16} />
-            </button>
+            {groups.length > 1 ? (
+              <button
+                title="Remove grouping"
+                onClick={handleCleanGroups}
+                className={`ml-2 mr-auto flex size-5 items-center rounded text-red-500 hover:text-red-700`}>
+                <MdGroupRemove size={16} />
+              </button>
+            ) : (
+              <div className="mr-8 size-5" />
+            )}
 
             <h1 className="text-lg font-bold">Participants ({participants.filter(p => p.isVisible).length}): </h1>
             <button
