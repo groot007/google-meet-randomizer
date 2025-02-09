@@ -1,5 +1,6 @@
 import { type Group } from '@src/types';
 import GroupIcon from './GroupIcon';
+import { useEffect, useRef, type Ref } from 'react';
 
 type GroupSelectorProps = {
   currentGroup: Group;
@@ -7,6 +8,7 @@ type GroupSelectorProps = {
   isOpen: boolean;
   onToggle: () => void;
   availableGroups: Group[];
+  closePopup?: () => void;
 };
 
 const defaultGroup: Group = {
@@ -16,11 +18,33 @@ const defaultGroup: Group = {
   type: 'text',
 };
 
-const GroupSelector = ({ currentGroup, onSelect, isOpen, onToggle, availableGroups }: GroupSelectorProps) => {
+const GroupSelector = ({
+  currentGroup,
+  onSelect,
+  isOpen,
+  onToggle,
+  availableGroups,
+  closePopup,
+}: GroupSelectorProps) => {
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
+        closePopup?.();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [closePopup]);
+
   return (
     <div className="relative flex items-center justify-center">
       {isOpen && (
-        <div className="absolute left-0 top-5 z-50 flex items-center rounded bg-gray-600 p-1 opacity-100 shadow-lg">
+        <div
+          className="absolute left-0 top-5 z-50 flex items-center rounded bg-gray-600 p-1 opacity-100 shadow-lg"
+          ref={popupRef}>
           {availableGroups.map(group => {
             return (
               <button

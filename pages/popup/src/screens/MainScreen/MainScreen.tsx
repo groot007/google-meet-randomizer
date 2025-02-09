@@ -3,7 +3,7 @@ import { generateUniqueId, withErrorBoundary, withSuspense } from '@extension/sh
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useCurrentUrl, useInitContentScript } from '../../hooks';
-import { generateListString, getUniqueParticipants, groupByLabel, shuffleArray } from '../../utils';
+import { generateListString, getUniqueParticipants, groupByLabel, mergeParticipants, shuffleArray } from '../../utils';
 import { FaRandom, FaClipboard, FaPaperPlane, FaRegTrashAlt } from 'react-icons/fa';
 import { RiCheckboxMultipleBlankLine, RiCheckboxMultipleLine } from 'react-icons/ri';
 import { useSettingsStore } from '@src/store/settings';
@@ -15,45 +15,9 @@ import { useUIStore } from '@src/store/ui';
 import { SearchInput } from '../../components/SearchInput';
 import ListSection from './ListSection';
 import { ErrorCleanStorage } from '@src/components/ErrorBounding';
+import { MdGroupRemove } from 'react-icons/md';
 
 type TimeoutId = ReturnType<typeof setTimeout>;
-
-const mergeParticipants = (newParticipants: any[], storedParticipants: ParticipantsListItem[]) => {
-  // Keep track of processed participants
-  const processedNames = new Set();
-
-  // Map new participants with stored data if exists
-  const mergedParticipants = newParticipants.map(newP => {
-    processedNames.add(newP.name);
-    const stored = storedParticipants.find(p => p.name === newP.name);
-
-    return {
-      ...newP,
-      included: stored?.included ?? true,
-      pinnedTop: stored?.pinnedTop ?? false,
-      pinnedBottom: stored?.pinnedBottom ?? false,
-      id: stored?.id ?? generateUniqueId(),
-      isVisible: true,
-      group: stored?.group ?? {
-        label: 'User',
-        color: '#000',
-      },
-    };
-  });
-
-  const addedManually = storedParticipants.filter(p => p.isAddedManually);
-
-  // Add stored participants that are not in new list as invisible
-  const remainingStored = storedParticipants
-    .filter(p => !processedNames.has(p.name))
-    .filter(p => !p.isAddedManually)
-    .map(p => ({
-      ...p,
-      isVisible: false,
-    }));
-
-  return [...mergedParticipants, ...addedManually, ...remainingStored];
-};
 
 const MainContent = () => {
   const [showTooltip, setShowTooltip] = useState<boolean>(false);
@@ -96,9 +60,8 @@ const MainContent = () => {
         if (currentTab?.id) {
           chrome.tabs.sendMessage(currentTab.id, { action: 'getParticipants' }, response => {
             if (response?.participants) {
-              const mergedList = mergeParticipants(response.participants, participants);
-              const uniqueParticipants = getUniqueParticipants(mergedList);
-              setParticipants(uniqueParticipants, true);
+              const mergedList = mergeParticipants(response?.participants, participants);
+              setParticipants(mergedList);
             }
           });
         }
@@ -116,8 +79,7 @@ const MainContent = () => {
         const mergedList = mergeParticipants(request.participants, participants);
 
         if (mergedList.length) {
-          const uniqueParticipants = getUniqueParticipants(mergedList);
-          setParticipants(uniqueParticipants, true);
+          setParticipants(mergedList);
         }
       }
     });
@@ -134,6 +96,19 @@ const MainContent = () => {
     },
     [participants],
   );
+
+  const handleCleanGroups = useCallback(() => {
+    const participatnsWithoutGroups = participants.map(p => ({
+      ...p,
+      group: {
+        id: 'default',
+        type: 'text',
+        label: 'User',
+        color: '#000',
+      } as ParticipantsListItem['group'],
+    }));
+    setParticipants(participatnsWithoutGroups);
+  }, []);
 
   const shuffleList = useCallback(() => {
     const visibleParticipants = participants.filter(p => p.isVisible);
@@ -234,8 +209,12 @@ const MainContent = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="mr-2 size-5"></div>
-            <div className="mr-2 size-5"></div>
+            <button
+              title="Remove grouping"
+              onClick={handleCleanGroups}
+              className={`ml-2 mr-auto flex size-5 items-center rounded text-red-500 hover:text-red-700`}>
+              <MdGroupRemove size={16} />
+            </button>
 
             <h1 className="text-lg font-bold">Participants ({participants.filter(p => p.isVisible).length}): </h1>
             <button

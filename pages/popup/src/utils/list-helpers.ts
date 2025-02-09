@@ -1,3 +1,4 @@
+import { generateUniqueId } from '@extension/shared';
 import { type ParticipantsListItem } from '@src/types';
 
 export const sortByStatus = (list: ParticipantsListItem[]): ParticipantsListItem[] => {
@@ -43,4 +44,41 @@ export const groupByLabel = <T extends Record<string, any>>(array: T[]) => {
   );
 
   return grouped;
+};
+
+export const mergeParticipants = (
+  newParticipants: any[],
+  storedParticipants: ParticipantsListItem[],
+): ParticipantsListItem[] => {
+  const participantsByName = new Map(storedParticipants.map(p => [p.name, { ...p, isVisible: p.isAddedManually }]));
+
+  const storedNames = new Set(storedParticipants.map(p => p.name));
+
+  for (const newP of newParticipants) {
+    const stored = participantsByName.get(newP.name);
+    if (!stored?.isAddedManually) {
+      participantsByName.set(newP.name, {
+        ...newP,
+        included: stored?.included ?? true,
+        pinnedTop: stored?.pinnedTop ?? false,
+        pinnedBottom: stored?.pinnedBottom ?? false,
+        id: stored?.id ?? generateUniqueId(),
+        isVisible: true,
+        group: stored?.group ?? {
+          id: 'default',
+          type: 'icon',
+          label: 'User',
+          color: '#000',
+        },
+      });
+    }
+  }
+
+  // Maintain order of stored participants and append new ones
+  return [
+    ...storedParticipants.map(p => participantsByName.get(p.name)).filter(Boolean),
+    ...Array.from(participantsByName.values())
+      .filter(p => !storedNames.has(p.name))
+      .filter(Boolean),
+  ];
 };

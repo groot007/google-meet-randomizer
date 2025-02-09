@@ -20,8 +20,6 @@ const List = ({ items, onToggleInclude, onDelete, onChangeGroup }: ListProps) =>
   const { groups: availableGroups } = useGroupsStore();
   const defaultGroup = availableGroups[0];
 
-  console.log('AVAILABLE GROUPS', availableGroups);
-
   return (
     <ul ref={animationParent}>
       {visibleItems.map(item => (
@@ -35,6 +33,7 @@ const List = ({ items, onToggleInclude, onDelete, onChangeGroup }: ListProps) =>
               onSelect={group => onChangeGroup?.(item.id, group)}
               isOpen={openIconSelector === item.id}
               availableGroups={availableGroups}
+              closePopup={() => setOpenIconSelector(null)}
               onToggle={() => setOpenIconSelector(openIconSelector === item.id ? null : item.id)}
             />
             <div className={`flex items-center ${!item.included ? 'opacity-50' : ''}`}>
