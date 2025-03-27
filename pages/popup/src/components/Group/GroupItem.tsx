@@ -13,7 +13,7 @@ export function GroupItem({ group, isLightTheme }: { group: Group; isLightTheme:
   };
 
   return (
-    <div key={group.id} ref={setNodeRef} style={style} {...attributes} {...listeners} key={group.id}>
+    <div key={group.id} ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <div
         className={`relative mb-3 flex items-center justify-center rounded-md ${isLightTheme ? 'bg-white' : 'bg-gray-600'} cursor-grab before:absolute before:-left-2 before:top-1/2 before:-translate-y-1/2 before:text-[20px] before:opacity-50 before:content-['⋮'] hover:opacity-80`}
         style={{
