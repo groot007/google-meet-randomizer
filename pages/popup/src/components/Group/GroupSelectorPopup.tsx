@@ -48,7 +48,7 @@ const GroupSelector = ({
           {availableGroups.map(group => {
             return (
               <button
-                key={group.label}
+                key={group.id}
                 onClick={() => {
                   onSelect(group);
                   onToggle();

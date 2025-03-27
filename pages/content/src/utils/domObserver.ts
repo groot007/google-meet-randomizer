@@ -11,7 +11,6 @@ export class DOMObserver {
   static async init() {
     await SelectorService.init();
     this.selectors = SelectorService.getAllSelectors();
-
     const targetNode = await waitForElement(this.selectors.PARTICIPANTS_NUMBER);
     await this.setupPanels();
     this.observeChanges(targetNode);
@@ -29,6 +28,7 @@ export class DOMObserver {
       await setTimeout(() => {
         triggerClick(chatPanel);
       }, 1000);
+      console.log('SETUUPEd');
     } catch (error) {
       console.error('Failed to setup panels:', error);
     }

@@ -65,7 +65,7 @@ export const mergeParticipants = (
         id: stored?.id ?? generateUniqueId(),
         isVisible: true,
         group: stored?.group ?? {
-          id: 'default',
+          id: 'default_id',
           type: 'icon',
           label: 'User',
           color: '#000',

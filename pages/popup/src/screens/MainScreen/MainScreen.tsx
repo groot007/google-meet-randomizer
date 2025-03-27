@@ -100,7 +100,7 @@ const MainContent = () => {
     const participatnsWithoutGroups = participants.map(p => ({
       ...p,
       group: {
-        id: 'default',
+        id: 'default_id',
         type: 'text',
         label: 'User',
         color: '#000',
@@ -142,7 +142,7 @@ const MainContent = () => {
       const currentTab = tabs[0];
       if (currentTab?.id) {
         chrome.tabs.sendMessage(currentTab.id, { action: 'sendToChat', message: formattedList }, response => {
-          console.log('response', currentTab?.id);
+          console.log('response', response);
           if (response?.success) {
             setShowSendingTooltip(true);
             console.log('Message sent successfully');

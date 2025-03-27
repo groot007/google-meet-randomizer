@@ -25,6 +25,7 @@ export const AddParticipantsForm = ({ isLightTheme, onSubmit }: AddParticipantsF
         pinnedBottom: false,
         isAddedManually: true,
         group: {
+          id: 'default_id',
           label: 'User',
           color: '#000',
         },
