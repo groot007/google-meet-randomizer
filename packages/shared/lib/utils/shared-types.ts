@@ -14,7 +14,7 @@ export type Selectors = {
 export const STORAGE_KEY = 'MEET_SELECTORS';
 
 export const DEFAULT_SELECTORS: Selectors = {
-  PARTICIPANT_ITEM: '[jsname="ME4pNd"] [data-participant-id]',
+  PARTICIPANT_ITEM: '[jsname="ME4pNd"] > * [role="listitem"][aria-label][data-participant-id]',
   CHAT_INPUT: '#bfTqV',
   CHAT_SEND_BUTTON: 'button',
   CHAT_SEND_BUTTON_PARENT: '.SjMC3',

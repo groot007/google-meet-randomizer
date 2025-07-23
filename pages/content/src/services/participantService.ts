@@ -2,18 +2,75 @@ import { SelectorService } from './selectorsService';
 
 export class ParticipantService {
   static getParticipants() {
-    const { PARTICIPANT_ITEM, TEXT_CONTENT } = SelectorService.getAllSelectors();
-    const participantElements = document.querySelectorAll(PARTICIPANT_ITEM);
+    const { TEXT_CONTENT } = SelectorService.getAllSelectors();
+
+    // CRITICAL CHECK: Ensure the participants panel exists
+    const participantsPanel = document.querySelector('[jsname="ME4pNd"]');
+    if (!participantsPanel) {
+      return [];
+    }
+
+    // Instead of using the complex selector, search within the participants panel only
+    // and use the most reliable attributes we found in the logs
+    const participantElements = participantsPanel.querySelectorAll(
+      '[role="listitem"][aria-label][data-participant-id]',
+    );
 
     const participants = Array.from(participantElements)
       .map(el => {
         const ariaLabel = el.getAttribute('aria-label');
         const name = ariaLabel || el.querySelector(TEXT_CONTENT)?.textContent || '';
+
         return name ? { name } : null;
       })
       .filter(Boolean);
 
-    return Array.from(new Map(participants.map(p => [p.name, p])).values());
+    const uniqueParticipants = Array.from(new Map(participants.map(p => [p!.name, p])).values());
+
+    return uniqueParticipants;
+  }
+
+  static isParticipantsPanelAvailable(): boolean {
+    const participantsPanel = document.querySelector('[jsname="ME4pNd"]');
+    const isAvailable = !!participantsPanel && (participantsPanel as HTMLElement).offsetHeight > 0;
+    return isAvailable;
+  }
+
+  static debugPanelStructure() {
+    const participantsPanel = document.querySelector('[jsname="ME4pNd"]');
+    if (!participantsPanel) {
+      return null;
+    }
+
+    // Check different possible selectors within the panel
+    const selectors = [
+      '[role="listitem"]',
+      '[aria-label]',
+      '[data-participant-id]',
+      '[role="listitem"][aria-label]',
+      '[role="listitem"][data-participant-id]',
+      '[aria-label][data-participant-id]',
+      '[role="listitem"][aria-label][data-participant-id]',
+    ];
+
+    const results = selectors.map(selector => {
+      const elements = participantsPanel.querySelectorAll(selector);
+      return {
+        selector,
+        count: elements.length,
+        elements: Array.from(elements)
+          .slice(0, 3)
+          .map(el => ({
+            tagName: el.tagName,
+            className: el.className,
+            role: el.getAttribute('role'),
+            ariaLabel: el.getAttribute('aria-label'),
+            participantId: el.getAttribute('data-participant-id'),
+          })),
+      };
+    });
+
+    return results;
   }
 
   static getMeetId() {

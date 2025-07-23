@@ -43,6 +43,11 @@ const MainContent = () => {
   const { participants, setParticipants, isSelectAllChecked, setSelectAllStatus, cleanStorage, groups } =
     useUrlParticipants(isGoogleMeet ? currentUrl : '');
 
+  const participantsRef = useRef(participants);
+  useEffect(() => {
+    participantsRef.current = participants;
+  }, [participants]);
+
   const toggleSelectAll = useCallback(() => {
     setParticipants(participants.map(p => ({ ...p, included: !isSelectAllChecked })));
     setSelectAllStatus(!isSelectAllChecked);
@@ -54,12 +59,16 @@ const MainContent = () => {
     if (!isGoogleMeet) return;
 
     const fetchParticipants = async () => {
+      // Give content script some time to fully initialize and setup observers
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
         const currentTab = tabs[0];
         if (currentTab?.id) {
           chrome.tabs.sendMessage(currentTab.id, { action: 'getParticipants' }, response => {
             if (response?.participants) {
-              const mergedList = mergeParticipants(response?.participants, participants);
+              // Use current participants from the ref to avoid stale closure
+              const mergedList = mergeParticipants(response.participants, participantsRef.current);
               setParticipants(mergedList);
             }
           });
@@ -68,7 +77,7 @@ const MainContent = () => {
     };
 
     fetchParticipants();
-  }, [currentUrl]);
+  }, [currentUrl, isGoogleMeet, setParticipants]);
 
   useEffect(() => {
     if (!isGoogleMeet) return;
@@ -93,7 +102,7 @@ const MainContent = () => {
     (newParticipants: ParticipantsListItem[]) => {
       setParticipants([...participants, ...newParticipants]);
     },
-    [participants],
+    [participants, setParticipants],
   );
 
   const handleCleanGroups = useCallback(() => {
@@ -142,13 +151,9 @@ const MainContent = () => {
       const currentTab = tabs[0];
       if (currentTab?.id) {
         chrome.tabs.sendMessage(currentTab.id, { action: 'sendToChat', message: formattedList }, response => {
-          console.log('response', response);
           if (response?.success) {
             setShowSendingTooltip(true);
-            console.log('Message sent successfully');
             setTimeout(() => setShowSendingTooltip(false), 800);
-          } else {
-            console.log('ERROR sending message', response);
           }
         });
       }
