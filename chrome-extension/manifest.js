@@ -18,7 +18,7 @@ const manifest = deepmerge(
     name: '__MSG_extensionName__',
     version: packageJson.version,
     description: '__MSG_extensionDescription__',
-    permissions: ['storage', 'activeTab', 'tabs'],
+    permissions: ['storage', 'activeTab'],
     action: {
       default_popup: 'popup/index.html',
       default_icon: 'icon-34.png',
