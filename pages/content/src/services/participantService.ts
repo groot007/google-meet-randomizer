@@ -16,10 +16,18 @@ export class ParticipantService {
       '[role="listitem"][aria-label][data-participant-id]',
     );
 
-    const participants = Array.from(participantElements)
+    // Try fallback selector if the original doesn't work
+    let elementsToProcess = participantElements;
+    if (participantElements.length === 0) {
+      elementsToProcess = participantsPanel.querySelectorAll('[aria-label][data-participant-id]');
+    }
+
+    const participants = Array.from(elementsToProcess)
       .map(el => {
         const ariaLabel = el.getAttribute('aria-label');
-        const name = ariaLabel || el.querySelector(TEXT_CONTENT)?.textContent || '';
+        const textContentElement = el.querySelector(TEXT_CONTENT);
+        const textContent = textContentElement?.textContent || '';
+        const name = ariaLabel || textContent || '';
 
         return name ? { name } : null;
       })
