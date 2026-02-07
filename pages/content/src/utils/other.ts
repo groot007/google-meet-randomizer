@@ -33,24 +33,71 @@ export const triggerClick = (element: Element | null): Promise<void> => {
       return;
     }
 
-    const clickEvent = new MouseEvent('click', {
-      bubbles: true,
-      cancelable: true,
-      view: window,
-    });
+    try {
+      console.debug('triggerClick: element', element);
 
-    // First click
-    element.dispatchEvent(clickEvent);
+      // Prefer the most interactive target: itself, a role=button ancestor, or an internal button
+      let target: Element | null = element;
+      if (!(element.getAttribute && element.getAttribute('role') === 'button') && element.tagName !== 'BUTTON') {
+        target =
+          element.closest('button, [role="button"], a, [tabindex]') ||
+          element.querySelector('button, [role="button"], a, [tabindex]') ||
+          element;
+      }
 
-    // Second click with delay
-    setTimeout(() => {
-      element.dispatchEvent(clickEvent);
+      console.debug('triggerClick: target chosen', target);
+
+      // Helper to dispatch an event
+      const dispatch = (ev: Event) => target!.dispatchEvent(ev);
+
+      // Focus first
+      (target as HTMLElement)?.focus?.();
+
+      // Sequence of pointer/mouse events
+      dispatch(new PointerEvent('pointerenter', { bubbles: true, cancelable: true, composed: true }));
+      dispatch(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, composed: true }));
+      dispatch(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
+
+      // Small delay before up/click to emulate real user
+      setTimeout(() => {
+        dispatch(new PointerEvent('pointerup', { bubbles: true, cancelable: true, composed: true }));
+        dispatch(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
+        dispatch(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+
+        // As a fallback, send keyboard activation (Enter)
+        try {
+          const keyDown = new KeyboardEvent('keydown', {
+            key: 'Enter',
+            code: 'Enter',
+            bubbles: true,
+            cancelable: true,
+          });
+          const keyUp = new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', bubbles: true, cancelable: true });
+          dispatch(keyDown);
+          dispatch(keyUp);
+        } catch (e) {
+          // ignore
+        }
+
+        // Another click for robustness
+        setTimeout(() => {
+          dispatch(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+          resolve();
+        }, 50);
+      }, 30);
+    } catch (e) {
+      console.error('triggerClick error', e);
       resolve();
-    }, 0);
+    }
   });
 };
 
 export function isElementVisible(el) {
+  console.log('Checking visibility for element:', el);
+  if (!el) {
+    console.log('Element is null or undefined.');
+    return false;
+  }
   const rect = el.getBoundingClientRect(),
     vWidth = window.innerWidth || document.documentElement.clientWidth,
     vHeight = window.innerHeight || document.documentElement.clientHeight,

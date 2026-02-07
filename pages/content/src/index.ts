@@ -7,9 +7,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
     case 'init':
       DOMObserver.init();
+      sendResponse({ success: true, message: 'Content script initialized' });
       break;
     case 'cleanup':
       DOMObserver.cleanup();
+      sendResponse({ success: true, message: 'Cleanup completed' });
       break;
     case 'getParticipants':
       sendResponse({
