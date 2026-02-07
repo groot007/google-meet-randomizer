@@ -72,14 +72,11 @@ export class DOMObserver {
     });
 
     // Check if both panels are ready
-    const bothPanelsReady =
-      presentPanel &&
-      (presentPanel as HTMLElement).offsetWidth > 0 &&
-      (presentPanel as HTMLElement).offsetHeight > 0 &&
-      participantsPanelReady;
+    const bothPanelsReady = presentPanel && participantsPanelReady;
 
     if (bothPanelsReady) {
       console.log('✅ Both chat and participants panels are ready, skipping setup');
+      this.updateParticipants();
       console.groupEnd();
       return;
     }
@@ -158,14 +155,11 @@ export class DOMObserver {
 
       // Step 2: Setup chat panel if needed
       const chatInputAfterParticipants = document.querySelector(this.selectors.CHAT_INPUT);
-      const needsChatSetup =
-        !chatInputAfterParticipants ||
-        (chatInputAfterParticipants as HTMLElement).offsetWidth === 0 ||
-        (chatInputAfterParticipants as HTMLElement).offsetHeight === 0;
+      const needsChatSetup = !chatInputAfterParticipants;
 
       if (needsChatSetup) {
         console.log('🚀 Waiting 1 second before clicking Chat Panel...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // await new Promise(resolve => setTimeout(resolve, 1000));
 
         console.log('🚀 Attempting to click Chat Panel button...');
 
@@ -199,6 +193,7 @@ export class DOMObserver {
       console.error('❌ Failed to setup panels:', error);
       console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace available');
     }
+    this.updateParticipants();
     console.groupEnd();
   }
 
@@ -207,7 +202,7 @@ export class DOMObserver {
       mutations.forEach(mutation => {
         if (mutation.type === 'characterData') {
           if (this.timeout) clearTimeout(this.timeout);
-          this.timeout = setTimeout(this.updateParticipants, 1000);
+          this.timeout = setTimeout(this.updateParticipants, 100);
         }
       });
     });

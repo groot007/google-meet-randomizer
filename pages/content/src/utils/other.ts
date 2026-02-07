@@ -53,38 +53,12 @@ export const triggerClick = (element: Element | null): Promise<void> => {
       // Focus first
       (target as HTMLElement)?.focus?.();
 
-      // Sequence of pointer/mouse events
-      dispatch(new PointerEvent('pointerenter', { bubbles: true, cancelable: true, composed: true }));
-      dispatch(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, composed: true }));
-      dispatch(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
+      dispatch(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
 
-      // Small delay before up/click to emulate real user
       setTimeout(() => {
-        dispatch(new PointerEvent('pointerup', { bubbles: true, cancelable: true, composed: true }));
-        dispatch(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
         dispatch(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-
-        // As a fallback, send keyboard activation (Enter)
-        try {
-          const keyDown = new KeyboardEvent('keydown', {
-            key: 'Enter',
-            code: 'Enter',
-            bubbles: true,
-            cancelable: true,
-          });
-          const keyUp = new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', bubbles: true, cancelable: true });
-          dispatch(keyDown);
-          dispatch(keyUp);
-        } catch (e) {
-          // ignore
-        }
-
-        // Another click for robustness
-        setTimeout(() => {
-          dispatch(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-          resolve();
-        }, 50);
-      }, 30);
+        resolve();
+      }, 50);
     } catch (e) {
       console.error('triggerClick error', e);
       resolve();
@@ -93,7 +67,6 @@ export const triggerClick = (element: Element | null): Promise<void> => {
 };
 
 export function isElementVisible(el) {
-  console.log('Checking visibility for element:', el);
   if (!el) {
     console.log('Element is null or undefined.');
     return false;

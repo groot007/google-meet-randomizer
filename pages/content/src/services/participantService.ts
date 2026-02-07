@@ -40,7 +40,7 @@ export class ParticipantService {
 
   static isParticipantsPanelAvailable(): boolean {
     const participantsPanel = document.querySelector('[jsname="ME4pNd"]');
-    const isAvailable = !!participantsPanel && (participantsPanel as HTMLElement).offsetHeight > 0;
+    const isAvailable = !!participantsPanel;
     return isAvailable;
   }
 

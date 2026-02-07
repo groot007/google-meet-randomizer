@@ -16,7 +16,6 @@ export class MessageService {
     try {
       switch (request.action) {
         case 'getParticipants': {
-          // Simple approach: just get participants if panel is available
           if (ParticipantService.isParticipantsPanelAvailable()) {
             const participants = ParticipantService.getParticipants();
             sendResponse({ participants });
