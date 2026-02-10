@@ -19,7 +19,7 @@ export const DEFAULT_SELECTORS: Selectors = {
   CHAT_SEND_BUTTON: 'button',
   CHAT_SEND_BUTTON_PARENT: '.SjMC3',
   TEXT_CONTENT: '[jscontroller="LxQ0Q"]',
-  PARTICIPANTS_NUMBER: '.CvJr8b [data-tooltip-id="ucc-50"]',
+  PARTICIPANTS_NUMBER: '[jscontroller="DM9D1"]',
   OPEN_CHAT_BUTTON: '[jsname="A5il2e"][data-panel-id="2"]',
-  OPEN_MORE_PEOPLE_BUTTON: '.CvJr8b [data-tooltip-id="ucc-50"]',
+  OPEN_MORE_PEOPLE_BUTTON: '[jscontroller="N61cX"] img',
 };

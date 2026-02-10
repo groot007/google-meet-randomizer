@@ -116,6 +116,7 @@ export class DOMObserver {
             : false,
         });
 
+        console.log("More People button element before click:", morePeople);
         await triggerClick(morePeople);
         console.log('✅ More People button clicked');
 

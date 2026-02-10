@@ -35,30 +35,12 @@ export const triggerClick = (element: Element | null): Promise<void> => {
 
     try {
       console.debug('triggerClick: element', element);
-
-      // Prefer the most interactive target: itself, a role=button ancestor, or an internal button
-      let target: Element | null = element;
-      if (!(element.getAttribute && element.getAttribute('role') === 'button') && element.tagName !== 'BUTTON') {
-        target =
-          element.closest('button, [role="button"], a, [tabindex]') ||
-          element.querySelector('button, [role="button"], a, [tabindex]') ||
-          element;
-      }
-
-      console.debug('triggerClick: target chosen', target);
-
-      // Helper to dispatch an event
-      const dispatch = (ev: Event) => target!.dispatchEvent(ev);
-
-      // Focus first
-      (target as HTMLElement)?.focus?.();
-
-      dispatch(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-
-      setTimeout(() => {
-        dispatch(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+      element.click()
         resolve();
-      }, 50);
+      setTimeout(() => {
+        element.click()
+        resolve();
+      }, 100);
     } catch (e) {
       console.error('triggerClick error', e);
       resolve();
